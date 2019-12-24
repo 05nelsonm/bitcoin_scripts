@@ -17,12 +17,8 @@ get_dependencies() {
   if [ $counter -gt 0 ]; then
     sudo apt-get update && sudo apt-get install$INSTALL_STRING -y
   fi
-  unset counter INSTALL_STRING PACKAGE
+  unset counter INSTALL_STRING
 }
-
-if command -v tor 1>/dev/null; then
-  TORSOCKS_PKG="torsocks"
-fi
 
 case $1 in
   "wasabi-wallet")
