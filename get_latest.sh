@@ -57,7 +57,7 @@ source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
 check_versions() {
-  if [ "$CURRENT_VERSION" != "$LATEST_VERSION"]; then
+  if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
     return 0
   else
     echo "Version $LATEST_VERSION is already installed"
@@ -94,6 +94,18 @@ download_files() {
   fi
 }
 
+wasabi() {
+#  if check_versions; then
+    source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
+    set_download_dir ~/Downloads
+
+    if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
+      echo ""
+    fi
+
+#  fi
+}
+
 help() {
   echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
   echo ""
@@ -113,19 +125,9 @@ help() {
 }
 
 case $1 in
-  wasabi-wallet)
+  "wasabi-wallet")
     init $1
-    set_download_dir ~/Downloads
-    if check_versions; then
-
-      if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
-
-      else
-
-      fi
-
-    fi
-    exit 0
+    wasabi $1
     ;;
   *)
     help
