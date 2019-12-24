@@ -83,16 +83,47 @@ change_dir() {
   fi
 }
 
+# Format when sending to this method:
+# check_for_existing_package $PACKAGE_NAME $DOWNLOAD_URL $PACKAGE_2_NAME $DOWNLOAD_2_URL ...
+check_for_existing_package() {
+  local ARGUMENTS=( "$@" )
+  local COUNTER=0
+  for ((i=0; i < $#; i+=2)); do
+    if ! [ -f "${ARGUMENTS[$i]}" ]; then
+      local DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
+      let COUNTER++
+    fi
+  done
+
+  if [ $COUNTER -eq 0 ]; then
+    echo "Packages are already downloaded. Re-verifying them!"
+    echo ""
+    return 0
+  else
+
+    if download_files "$DOWNLOAD_STRING" "$PGP_FILE_URL"; then
+      return 0
+    fi
+
+  fi
+}
+
 download_files() {
   echo "Downloading packages to $DOWNLOAD_DIR"
   echo ""
 
-  if $WGET_TOR_FLAG wget $1 $2 $3; then
+  if $WGET_TOR_FLAG wget $@; then
     echo ""
     return 0
   else
+    echo "Something went wrong with the download."
+
+    if [ $WGET_TOR_FLAG != "" ]; then
+      echo "Try executing `sudo service tor restart` and re-running the script"
+    fi
+
     echo ""
-    return 1
+    exit 1
   fi
 }
 
@@ -102,9 +133,10 @@ wasabi() {
     set_download_dir ~/Downloads
     change_dir "$DOWNLOAD_DIR"
 
-#    if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
-#      echo ""
-#    fi
+    if check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
+                               "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL"; then
+        echo "verify signatures next"
+    fi
 
 #  fi
 }
