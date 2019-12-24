@@ -41,7 +41,7 @@ set_tor_options() {
     elif contains "$SCRIPT_OPTIONS" "--only-tor"; then
       echo ""
       echo "Tor connectivity check: FAILED"
-      echo "Exiting because flag `--only-tor` was expressed"
+      echo "Exiting because flag --only-tor was expressed"
       exit 1
     else
       echo ""
@@ -51,6 +51,11 @@ set_tor_options() {
 
     echo ""
     unset OUT
+  elif contains "$SCRIPT_OPTIONS" "--only-tor"; then
+    echo ""
+    echo "Tor is not installed"
+    echo "Exiting because flag --only-tor was expressed"
+    exit 1
   fi
 }
 
