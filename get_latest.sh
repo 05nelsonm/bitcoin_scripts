@@ -23,51 +23,10 @@ contains() {
   return 1
 }
 
-set_tor_options() {
-  if command -v tor 1>/dev/null; then
-    echo "Checking for Tor connectivity..."
-    echo ""
-
-    if OUT=$(curl --socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT \
-              https://check.torproject.org/ | cat | grep -m 1 "Congratulations" \
-              | xargs) && echo "$OUT" | grep -qs "Congratulations"; then
-      echo ""
-      echo "Tor connectivity check: SUCCESSFUL"
-      echo "Downloads will occur over Tor!"
-
-      TORSOCKS_PKG="torsocks"
-      CURL_TOR_FLAG="--socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT"
-      WGET_TOR_FLAG="torsocks"
-    elif contains "$SCRIPT_OPTIONS" "--only-tor"; then
-      echo ""
-      echo "Tor connectivity check: FAILED"
-      echo "Exiting because flag --only-tor was expressed"
-      exit 1
-    else
-      echo ""
-      echo "Tor connectivity check: FAILED"
-      echo "Downloads will occur over clearnet"
-    fi
-
-    echo ""
-    unset OUT
-  elif contains "$SCRIPT_OPTIONS" "--only-tor"; then
-    echo ""
-    echo "Tor is not installed"
-    echo "Exiting because flag --only-tor was expressed"
-    exit 1
-  fi
-}
-
 init() {
   WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
-
   source_file "$WORKING_DIR/.env"
-
-  if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
-    set_tor_options
-  fi
-
+  source_file "$WORKING_DIR/scripts/set_tor_options.sh"
   source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
   source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
@@ -171,7 +130,7 @@ wasabi() {
                                   "$PGP_FILE_NAME_TEMP" "$PGP_FILE_URL_TEMP"; then
 
       if [ "$IMPORT_PGP_NEEDED" = "yes" ]; then
-        #import_pgp_keys_from_file "$PGP_FILE_NAME"
+#        import_pgp_keys_from_file "$PGP_FILE_NAME"
         unset IMPORT_PGP_NEEDED
       fi
 
