@@ -24,8 +24,6 @@ contains() {
 }
 
 set_tor_options() {
-  # Do connectivity check for Tor.
-  # Change TOR_IP & TOR_PORT in .env file to match your settings.
   echo "Checking for Tor connectivity..."
   echo ""
 
