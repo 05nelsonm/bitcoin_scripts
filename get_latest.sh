@@ -55,6 +55,7 @@ if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
 fi
 
 source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
+source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
 help() {
