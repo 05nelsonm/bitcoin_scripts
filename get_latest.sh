@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_OPTIONS=($2 $3)
+SCRIPT_OPTIONS=($2 $3 $4 $5 $6)
 
 source_file() {
   if [ -f $1 ]; then
@@ -24,23 +24,34 @@ contains() {
 }
 
 set_tor_options() {
-  echo "Checking for Tor connectivity..."
-  echo ""
-
-  if OUT=$(curl --socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT \
-            https://check.torproject.org/ | cat | grep -m 1 "Congratulations" \
-            | xargs) && echo "$OUT" | grep -qs "Congratulations"; then
+  if command -v tor 1>/dev/null; then
+    echo "Checking for Tor connectivity..."
     echo ""
-    echo "Tor connection check: SUCCESSFUL"
-    echo "Downloads will occur over Tor!"
 
-    TORSOCKS_PKG="torsocks"
-    CURL_TOR_FLAG="--socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT"
-    WGET_TOR_FLAG="torsocks"
+    if OUT=$(curl --socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT \
+              https://check.torproject.org/ | cat | grep -m 1 "Congratulations" \
+              | xargs) && echo "$OUT" | grep -qs "Congratulations"; then
+      echo ""
+      echo "Tor connectivity check: SUCCESSFUL"
+      echo "Downloads will occur over Tor!"
+
+      TORSOCKS_PKG="torsocks"
+      CURL_TOR_FLAG="--socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT"
+      WGET_TOR_FLAG="torsocks"
+    elif contains "$SCRIPT_OPTIONS" "--only-tor"; then
+      echo ""
+      echo "Tor connectivity check: FAILED"
+      echo "Exiting because flag `--only-tor` was expressed"
+      exit 1
+    else
+      echo ""
+      echo "Tor connectivity check: FAILED"
+      echo "Downloads will occur over clearnet"
+    fi
+
+    echo ""
+    unset OUT
   fi
-
-  echo ""
-  unset OUT
 }
 
 init() {
@@ -156,12 +167,19 @@ help() {
   echo "                           of Wasabi Wallet"
   echo ""
   echo "    [OPTIONS]:"
-  echo "    --no-tor   .  .  .  .  By default downloads occur over"
-  echo "                           Tor if it is found and passes a"
-  echo "                           connectivity check."
+  echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
+  echo "                           connectivity check will be done."
   echo ""
-  echo "                           Setting this option will skip that"
+  echo "                           If it passes, the script will download"
+  echo "                           over Tor. If it fails, it falls back"
+  echo "                           to downloading over clearnet."
+  echo ""
+  echo "                           Setting this option will skip the check"
   echo "                           and make downloads over clearnet."
+  echo ""
+  echo "    --only-tor    .  .  .  This flag will only use tor to download"
+  echo "                           packages. If the connectivity check fails,"
+  echo "                           the script exits."
 
   exit 0
 }
