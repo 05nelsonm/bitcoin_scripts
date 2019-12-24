@@ -56,6 +56,15 @@ source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
 source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
+check_versions() {
+  if [ "$CURRENT_VERSION" != "$LATEST_VERSION"]; then
+    return 0
+  else
+    echo "Version $LATEST_VERSION is already installed"
+    exit 0
+  fi
+}
+
 set_download_dir() {
   DOWNLOAD_DIR=$1
 }
@@ -107,9 +116,13 @@ case $1 in
   wasabi-wallet)
     init $1
     set_download_dir ~/Downloads
-    if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
+    if check_versions; then
 
-    else
+      if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
+
+      else
+
+      fi
 
     fi
     exit 0
