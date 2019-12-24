@@ -31,15 +31,6 @@ init() {
   source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
-check_versions() {
-  if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
-    return 0
-  else
-    echo "Version $LATEST_VERSION is already installed"
-    exit 0
-  fi
-}
-
 set_download_dir() {
   DOWNLOAD_DIR=$1
 }
@@ -115,28 +106,26 @@ check_pgp_keys() {
 }
 
 wasabi() {
-  if check_versions; then
-    source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
-    set_download_dir ~/Downloads
-    change_dir "$DOWNLOAD_DIR"
+  source_file "$WORKING_DIR/scripts/check_versions.sh"
+  source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
+  set_download_dir ~/Downloads
+  change_dir "$DOWNLOAD_DIR"
 
-    if ! check_pgp_keys; then
+  if ! check_pgp_keys; then
         local PGP_FILE_NAME_TEMP="$PGP_FILE_NAME"
         local PGP_FILE_URL_TEMP="$PGP_FILE_URL"
+  fi
+
+  if check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
+                                "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL" \
+                                "$PGP_FILE_NAME_TEMP" "$PGP_FILE_URL_TEMP"; then
+
+    if [ "$IMPORT_PGP_NEEDED" = "yes" ]; then
+#      import_pgp_keys_from_file "$PGP_FILE_NAME"
+      unset IMPORT_PGP_NEEDED
     fi
 
-    if check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
-                                  "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL" \
-                                  "$PGP_FILE_NAME_TEMP" "$PGP_FILE_URL_TEMP"; then
-
-      if [ "$IMPORT_PGP_NEEDED" = "yes" ]; then
-#        import_pgp_keys_from_file "$PGP_FILE_NAME"
-        unset IMPORT_PGP_NEEDED
-      fi
-
-      echo "verify signatures next"
-    fi
-
+    echo "verify signatures next"
   fi
 }
 
