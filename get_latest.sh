@@ -56,6 +56,35 @@ source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
 source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
+set_download_dir() {
+  DOWNLOAD_DIR=$1
+}
+
+download_files() {
+  if [ -d $DOWNLOAD_DIR ]; then
+    cd $DOWNLOAD_DIR
+  elif [ -d $DOWNLOAD_DIR/.. ]; then
+    mkdir $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
+  elif [ -d ~/Downloads ]; then
+    set_download_dir ~/Downloads
+    cd $DOWNLOAD_DIR
+  else
+    set_download_dir ~/Downloads
+    mkdir $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
+  fi
+
+  echo "Downloading packages to $DOWNLOAD_DIR"
+  echo ""
+
+  if $WGET_TOR_FLAG wget $1 $2 $3; then
+    echo ""
+    return 0
+  else
+    echo ""
+    return 1
+  fi
+}
+
 help() {
   echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
   echo ""
@@ -77,6 +106,13 @@ help() {
 case $1 in
   wasabi-wallet)
     init $1
+    set_download_dir ~/Downloads
+    if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
+
+    else
+
+    fi
+    exit 0
     ;;
   *)
     help
