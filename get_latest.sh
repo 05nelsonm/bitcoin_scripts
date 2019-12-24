@@ -55,23 +55,16 @@ set_tor_options() {
 }
 
 init() {
-WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
 
-source_file "$WORKING_DIR/.env"
+  source_file "$WORKING_DIR/.env"
 
-if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
-  set_tor_options
-fi
+  if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
+    set_tor_options
+  fi
 
-source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
-echo "$COUNTER"
-echo "$INSTALL_STRING"
-echo "${NEEDED_DEPENDENCIES[*]}"
-
-source_file "$WORKING_DIR/scripts/project_info.sh" $1
-echo "$REPO_OWNER"
-echo "$REPO_NAME"
-echo "$LATEST_RELEASE_URL"
+  source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
+  source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
 check_versions() {
