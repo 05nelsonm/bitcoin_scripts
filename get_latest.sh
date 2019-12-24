@@ -101,8 +101,10 @@ check_for_existing_package() {
   local COUNTER=0
   for ((i=0; i < $#; i+=2)); do
     if ! [ -f "${ARGUMENTS[$i]}" ]; then
-      local DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
-      let COUNTER++
+      if ! [ -z "${ARGUMENTS[$i]}" ]; then
+        local DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
+        let COUNTER++
+      fi
     fi
   done
 
@@ -112,7 +114,7 @@ check_for_existing_package() {
     return 0
   else
 
-    if download_files "$DOWNLOAD_STRING" "$PGP_FILE_URL"; then
+    if download_files "$DOWNLOAD_STRING"; then
       return 0
     fi
 
@@ -138,15 +140,37 @@ download_files() {
   fi
 }
 
+check_pgp_keys() {
+  if OUT=$(gpg --list-keys 2>/dev/null) &&
+           echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
+    return 0
+  else
+    IMPORT_PGP_NEEDED="yes"
+    return 1
+  fi
+}
+
 wasabi() {
   if check_versions; then
     source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
     set_download_dir ~/Downloads
     change_dir "$DOWNLOAD_DIR"
 
+    if ! check_pgp_keys; then
+        local PGP_FILE_NAME_TEMP="$PGP_FILE_NAME"
+        local PGP_FILE_URL_TEMP="$PGP_FILE_URL"
+    fi
+
     if check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
-                               "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL"; then
-        echo "verify signatures next"
+                                  "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL" \
+                                  "$PGP_FILE_NAME_TEMP" "$PGP_FILE_URL_TEMP"; then
+
+      if [ "$IMPORT_PGP_NEEDED" = "yes" ]; then
+        #import_pgp_keys_from_file "$PGP_FILE_NAME"
+        unset IMPORT_PGP_NEEDED
+      fi
+
+      echo "verify signatures next"
     fi
 
   fi
