@@ -53,7 +53,14 @@ if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
 fi
 
 source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
+echo "$COUNTER"
+echo "$INSTALL_STRING"
+echo "${NEEDED_DEPENDENCIES[*]}"
+
 source_file "$WORKING_DIR/scripts/project_info.sh" $1
+echo "$REPO_OWNER"
+echo "$REPO_NAME"
+echo "$LATEST_RELEASE_URL"
 }
 
 check_versions() {
@@ -128,7 +135,7 @@ download_files() {
 }
 
 wasabi() {
-#  if check_versions; then
+  if check_versions; then
     source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
     set_download_dir ~/Downloads
     change_dir "$DOWNLOAD_DIR"
@@ -138,7 +145,7 @@ wasabi() {
         echo "verify signatures next"
     fi
 
-#  fi
+  fi
 }
 
 help() {

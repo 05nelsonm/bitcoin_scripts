@@ -4,31 +4,26 @@ get_dependencies() {
   echo "Checking for needed dependencies"
   echo ""
 
-  counter=0
+  local COUNTER=0
 
   for PACKAGE in $1; do
     if ! dpkg -l $PACKAGE > /dev/null 2>&1; then
-      INSTALL_STRING+=" $PACKAGE"
+      local INSTALL_STRING+=" $PACKAGE"
       let counter++
     fi
   done
   unset PACKAGE
 
-  if [ $counter -gt 0 ]; then
+  if [ $COUNTER -gt 0 ]; then
     sudo apt-get update && sudo apt-get install$INSTALL_STRING -y
   fi
-  unset counter INSTALL_STRING
 }
 
 case $1 in
   "wasabi-wallet")
-    NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+    local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
     get_dependencies "${NEEDED_DEPENDENCIES[*]}"
-    ;;
-  *)
-    echo "try the --help flag to see accepted script inputs"
-    exit 1
     ;;
 esac
 
-unset TORSOCKS_PKG NEEDED_DEPENDENCIES
+unset TORSOCKS_PKG
