@@ -69,7 +69,7 @@ set_download_dir() {
   DOWNLOAD_DIR=$1
 }
 
-download_files() {
+change_dir() {
   if [ -d $DOWNLOAD_DIR ]; then
     cd $DOWNLOAD_DIR
   elif [ -d $DOWNLOAD_DIR/.. ]; then
@@ -81,7 +81,9 @@ download_files() {
     set_download_dir ~/Downloads
     mkdir $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
   fi
+}
 
+download_files() {
   echo "Downloading packages to $DOWNLOAD_DIR"
   echo ""
 
@@ -98,10 +100,11 @@ wasabi() {
 #  if check_versions; then
     source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
     set_download_dir ~/Downloads
+    change_dir "$DOWNLOAD_DIR"
 
-    if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
-      echo ""
-    fi
+#    if download_files $PACKAGE_DOWNLOAD_URL $SIGNATURE_DOWNLOAD_URL; then
+#      echo ""
+#    fi
 
 #  fi
 }
