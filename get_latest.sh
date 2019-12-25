@@ -280,8 +280,38 @@ ckcc_firmware() {
 }
 
 ckcc_protocol() {
-  set_download_dir ~/Downloads
-  change_dir "$DOWNLOAD_DIR"
+  local PYTHON_3_VERSION=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f 2)
+
+  if [ $PYTHON_3_VERSION -gt 5 ]; then
+    local DIST-PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
+
+    if [ -f "$DIST-PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
+      echo "ckcc-protocol is already up to date with version $LATEST_VERSION!"
+      return 0
+    fi
+
+    set_download_dir ~/Downloads
+    change_dir "$DOWNLOAD_DIR"
+
+    if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
+
+      if download_files "$DOWNLOAD_STRING"; then
+        unset DOWNLOAD_STRING
+      else
+        return 1
+      fi
+
+    fi
+
+    if tar -xzf $PACKAGE_NAME; then
+      cd Coldcard-ckcc-protocol-*
+    fi
+
+  else
+    return 1
+  fi
+
+  return 0
 }
 
 wasabi_wallet() {
