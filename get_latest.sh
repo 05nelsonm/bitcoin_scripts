@@ -116,6 +116,17 @@ import_pgp_keys_from_file() {
   fi
 }
 
+import_pgp_keys_from_url() {
+  if curl -s $CURL_TOR_FLAG $PGP_IMPORT_URL | gpg --import 2>/dev/null; then
+    echo "PGP keys have been successfully imported"
+    echo ""
+  else
+    echo "Failed to import PGP keys to verify package signatures"
+    echo "Check your gpg settings and re-run the script"
+    exit 1
+  fi
+}
+
 verify_signature() {
   if OUT=$(gpg --status-fd 1 --verify "$1" 2>/dev/null) &&
            echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
@@ -164,6 +175,9 @@ ckcc_firmware() {
   check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                              "$SIGNATURE_NAME" "$SIGNATURE_URL"
 
+  if ! check_pgp_keys; then
+    import_pgp_keys_from_url "$PGP_IMPORT_URL"
+  fi
 }
 
 help() {
