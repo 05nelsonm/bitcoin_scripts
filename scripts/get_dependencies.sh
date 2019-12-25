@@ -24,6 +24,10 @@ case $1 in
     local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
     get_dependencies "${NEEDED_DEPENDENCIES[*]}"
     ;;
+  "ckcc-firmware")
+    local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+    get_dependencies "${NEEDED_DEPENDENCIES[*]}"
+    ;;
 esac
 
 unset TORSOCKS_PKG
