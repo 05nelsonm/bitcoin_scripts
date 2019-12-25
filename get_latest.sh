@@ -114,7 +114,7 @@ check_pgp_keys() {
 
 # When using this method:
 # import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
-import_pgp_keys_from_file() {
+download_and_import_pgp_keys_from_file() {
   echo "Importing PGP key from file..."
   echo ""
 
@@ -296,7 +296,7 @@ wasabi_wallet() {
 
   if ! check_pgp_keys; then
 
-    if ! import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
+    if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
       return 1
     fi
 
