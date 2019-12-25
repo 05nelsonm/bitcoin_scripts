@@ -23,11 +23,17 @@ get_dependencies() {
 }
 
 case $1 in
-  "wasabi-wallet")
+  "ckcc-firmware")
     local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
     get_dependencies "${NEEDED_DEPENDENCIES[*]}"
     ;;
-  "ckcc-firmware")
+  "ckcc-protocol")
+    local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
+                               "libudev1" "libudev-dev" "python3" \
+                               "python-pip" $TORSOCKS_PKG)
+    get_dependencies "${NEEDED_DEPENDENCIES[*]}"
+    ;;
+  "wasabi-wallet")
     local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
     get_dependencies "${NEEDED_DEPENDENCIES[*]}"
     ;;
