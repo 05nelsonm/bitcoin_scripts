@@ -207,14 +207,22 @@ verify_sha256sum() {
 
 # When using this method:
 # clean_up $FILE_1 $FILE_2 ...
+#
+# Can also send `--sudo` as the first argument to
+# make this method call `sudo rm -rf ...`
 clean_up() {
+  if [ $1 = --sudo ]; then
+    local SUDO="sudo"
+    shift
+  fi
+
   local ARGUMENTS=( $@ )
   local CLEAN_UP_DIR=$(pwd)
 
   for ((i=0; i < $#; i++)); do
     if ! [ -z "${ARGUMENTS[$i]}" ]; then
-      if [ -f "${ARGUMENTS[$i]}" ]; then
-        rm -rf "${ARGUMENTS[$i]}"
+      if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
+        $SUDO rm -rf "${ARGUMENTS[$i]}"
         echo "DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
       fi
     fi
@@ -313,6 +321,7 @@ ckcc_protocol() {
           echo "ckcc-protocol-$LATEST_VERSION has been installed successfully!"
           echo ""
           change_dir "$DOWNLOAD_DIR"
+          clean_up "--sudo" "Coldcard-ckcc-protocol-*" "$PACKAGE_NAME"
         fi
 
       else
