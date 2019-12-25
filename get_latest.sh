@@ -7,7 +7,7 @@ source_file() {
   if [ -f $FILE ]; then
     source $FILE $2 $3 $4
   else
-    echo "Unable to find file $1"
+    echo "Unable to find file $FILE"
     exit 1
   fi
 }
@@ -42,7 +42,7 @@ change_dir() {
   fi
 }
 
-# Format when sending to this method:
+# When using this method:
 # check_for_already_downloaded_package $PACKAGE_NAME $DOWNLOAD_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
 #                                      ...
@@ -69,6 +69,8 @@ check_for_already_downloaded_package() {
   fi
 }
 
+# When using this method:
+# download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
 download_files() {
   echo "Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
@@ -98,6 +100,8 @@ check_pgp_keys() {
   fi
 }
 
+# When using this method:
+# import_pgp_keys_from_file $PGP_FILE $PGP_FILE_DOWNLOAD_URL
 import_pgp_keys_from_file() {
   echo "Importing PGP key from file..."
   echo ""
@@ -120,6 +124,8 @@ import_pgp_keys_from_file() {
   fi
 }
 
+# When using this method:
+# import_pgp_keys_from_url $KEY_SERVER_URL
 import_pgp_keys_from_url() {
   echo "Importing PGP key..."
   echo ""
@@ -149,6 +155,10 @@ verify_pgp_signature() {
   fi
 }
 
+# When using this method:
+# verify_sha256sum $SHA256SUM_FILE
+#
+# The files it will be checking must all be in the same directory as $SHA256SUM_FILE
 verify_sha256sum() {
   echo "Verifying sha256sum of $1..."
   echo ""
