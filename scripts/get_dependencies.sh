@@ -30,7 +30,7 @@ get_dependencies() {
 case $1 in
   "no-specified-package")
     shift
-    local NEEDED_DEPENDENCIES=( "$@" )
+    local NEEDED_DEPENDENCIES=( $@ )
     if ! get_dependencies "${NEEDED_DEPENDENCIES[*]}"; then
       return 1
     fi
