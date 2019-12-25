@@ -59,11 +59,11 @@ check_for_already_downloaded_package() {
   echo "Checking if package(s) have already been downloaded..."
   echo ""
 
-  local ARGUMENTS=( "$@" )
+  local ARGUMENTS=( $@ )
   local COUNTER=0
   for ((i=0; i < $#; i+=2)); do
-    if ! [ -f "${ARGUMENTS[$i]}" ]; then
-      if ! [ -z "${ARGUMENTS[$i]}" ]; then
+    if ! [ -z "${ARGUMENTS[$i]}" ]; then
+      if ! [ -f "${ARGUMENTS[$i]}" ]; then
         local DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
         let COUNTER++
       fi
@@ -200,8 +200,17 @@ verify_sha256sum() {
 }
 
 clean_up() {
-  rm -rf $@
-  echo "Directories have been cleaned up"
+  local ARGUMENTS=( $@ )
+  local CLEAN_UP_DIR=$(pwd)
+
+  for ((i=0; i < $#; i++)); do
+    if ! [ -z "${ARGUMENTS[$i]}" ]; then
+      if [ -f "${ARGUMENTS[$i]}" ]; then
+        rm -rf "${ARGUMENTS[$i]}"
+        echo "DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+      fi
+    fi
+  done
 }
 
 init() {
