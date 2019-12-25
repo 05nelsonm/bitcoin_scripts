@@ -279,6 +279,10 @@ ckcc_firmware() {
 
   if verify_sha256sum "$SIGNATURE_NAME"; then
     clean_up "$SIGNATURE_NAME"
+    echo ""
+    echo "Please leave $PACKAGE_NAME in $DOWNLOAD_DIR after you have"
+    echo "updated your device so this script can tell what version"
+    echo "you have installed!"
   else
     clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
     return 1
