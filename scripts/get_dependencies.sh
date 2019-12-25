@@ -1,7 +1,7 @@
 #!/bin/bash
 
 get_dependencies() {
-  echo "Checking for needed dependencies"
+  echo "Checking for needed dependencies..."
   echo ""
 
   local COUNTER=0
@@ -16,11 +16,18 @@ get_dependencies() {
 
   if [ $COUNTER -gt 0 ]; then
     sudo apt-get update && sudo apt-get install$INSTALL_STRING -y
+  else
+    echo "All needed packages present"
+    echo ""
   fi
 }
 
 case $1 in
   "wasabi-wallet")
+    local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+    get_dependencies "${NEEDED_DEPENDENCIES[*]}"
+    ;;
+  "ckcc-firmware")
     local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
     get_dependencies "${NEEDED_DEPENDENCIES[*]}"
     ;;
