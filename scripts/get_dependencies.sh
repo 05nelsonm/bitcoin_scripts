@@ -1,7 +1,7 @@
 #!/bin/bash
 
 get_dependencies() {
-  echo "Checking for needed dependencies..."
+  echo "  MESSAGE:  Checking for needed dependencies..."
   echo ""
 
   local COUNTER=0
@@ -21,7 +21,7 @@ get_dependencies() {
     fi
 
   else
-    echo "All needed dependencies are present!"
+    echo "  MESSAGE:  All needed dependencies are present!"
     echo ""
     return 0
   fi
@@ -57,5 +57,4 @@ case $1 in
     ;;
 esac
 
-unset TORSOCKS_PKG
 return 0

@@ -1,5 +1,13 @@
 #!/bin/bash
 
+latest_version_error_message() {
+  echo "  MESSAGE:  Could not obtain the latest version number"
+  echo "  MESSAGE:  from:  $1"
+  echo "  MESSAGE:"
+  echo "  MESSAGE:  If you're using Tor, try 'sudo service tor restart'"
+  echo "  MESSAGE:  and re-run the script"
+}
+
 case $1 in
 
   ## Information obtained from:
@@ -15,7 +23,11 @@ case $1 in
     local LATEST_RELEASE_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/tags"
 
     #CURRENT_VERSION= handled in get_latest.sh
-    LATEST_VERSION=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq '.[6]' | jq -r '.name')
+
+    if ! LATEST_VERSION=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq '.[6]' | jq -r '.name'); then
+      latest_version_error_message $LATEST_RELEASE_URL
+      return 1
+    fi
 
     PACKAGE_NAME="$LATEST_VERSION-coldcard.dfu"
     PACKAGE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/raw/master/releases/$PACKAGE_NAME"
@@ -34,7 +46,11 @@ case $1 in
     #PGP_IMPORT_URL=
 
     local LATEST_RELEASE_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/tags"
-    local LATEST_RELEASE_JSON=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq '.[0]')
+
+    if ! LATEST_RELEASE_JSON=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq '.[0]'); then
+      latest_version_error_message $LATEST_RELEASE_URL
+      return 1
+    fi
 
     #CURRENT_VERSION= handled in get_latest.sh
     LATEST_VERSION=$(echo "$LATEST_RELEASE_JSON" | jq -r '.name' | cut -d 'v' -f 2)
@@ -60,7 +76,11 @@ case $1 in
     local LATEST_RELEASE_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
 
     CURRENT_VERSION=$(wassabee -v | grep "Wasabi Client Version:" | cut -d ':' -f 2 | cut -d ' ' -f 2)
-    LATEST_VERSION=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq -r '.tag_name' | cut -d 'v' -f 2)
+
+    if ! LATEST_VERSION=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq -r '.tag_name' | cut -d 'v' -f 2); then
+      latest_version_error_message $LATEST_RELEASE_URL
+      return 1
+    fi
 
     PACKAGE_NAME="Wasabi-$LATEST_VERSION.deb"
     PACKAGE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$PACKAGE_NAME"
