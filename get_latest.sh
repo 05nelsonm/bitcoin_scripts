@@ -139,6 +139,17 @@ verify_signature() {
   fi
 }
 
+verify_sha256sum() {
+  if sha256sum --check $1 --ignore-missing 2>/dev/null; then
+    echo "$PACKAGE_NAME	has been verified and is located in $DOWNLOAD_DIR"
+    echo ""
+  else
+    echo "sha256sum check failed for $1"
+    echo ""
+    exit 1
+  fi
+}
+
 clean_up() {
   rm -rf $@
   echo "$DOWNLOAD_DIR has been cleaned up"
@@ -178,6 +189,10 @@ ckcc_firmware() {
   if ! check_pgp_keys; then
     import_pgp_keys_from_url "$PGP_IMPORT_URL"
   fi
+
+  verify_signature "$SIGNATURE_NAME"
+  verify_sha256sum "$SIGNATURE_NAME"
+  clean_up "$SIGNATURE_NAME"
 }
 
 help() {
