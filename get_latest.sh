@@ -2,6 +2,16 @@
 
 SCRIPT_PACKAGE=$1; shift
 SCRIPT_OPTIONS=( $@ )
+SET_TOR_COUNTER=0
+
+display_message_for_getting_package() {
+  echo ""
+  echo "============================================================================"
+  echo ""
+  echo "                       Getting $1 for you!"
+  echo ""
+  echo "============================================================================"
+}
 
 # When using this method:
 # source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
@@ -18,7 +28,7 @@ source_file() {
     fi
 
   else
-    echo "Unable to find file $FILE"
+    echo "  MESSAGE:  Unable to find file $FILE"
     exit 1
   fi
 }
@@ -36,20 +46,15 @@ contains() {
 }
 
 set_download_dir() {
+  unset DOWNLOAD_DIR
   DOWNLOAD_DIR=$1
 }
 
 change_dir() {
   if [ -d $DOWNLOAD_DIR ]; then
     cd $DOWNLOAD_DIR
-  elif [ -d $DOWNLOAD_DIR/.. ]; then
-    mkdir $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
-  elif [ -d ~/Downloads ]; then
-    set_download_dir ~/Downloads
-    cd $DOWNLOAD_DIR
   else
-    set_download_dir ~/Downloads
-    mkdir $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
+    mkdir -p $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
   fi
 }
 
@@ -58,7 +63,7 @@ change_dir() {
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
 #                                      ...
 check_for_already_downloaded_package() {
-  echo "Checking if package(s) have already been downloaded..."
+  echo "  MESSAGE:  Checking if package(s) have already been downloaded..."
   echo ""
 
   local ARGUMENTS=( $@ )
@@ -73,7 +78,7 @@ check_for_already_downloaded_package() {
   done
 
   if [ $COUNTER -eq 0 ]; then
-    echo "Packages are already downloaded"
+    echo "  MESSAGE:  Packages are already downloaded"
     echo ""
     return 0
   else
@@ -87,16 +92,16 @@ check_for_already_downloaded_package() {
 # Can also use string concatenation for a single argument
 # if URLs are separated by spaces.
 download_files() {
-  echo "Downloading package(s) to $DOWNLOAD_DIR..."
+  echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
 
   if $WGET_TOR_FLAG wget $@; then
     return 0
   else
-    echo "Something went wrong with the download"
+    echo "  MESSAGE:  Something went wrong with the download"
 
     if [ $WGET_TOR_FLAG != "" ]; then
-      echo "Try executing 'sudo service tor restart' and re-running the script"
+      echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
     fi
 
     return 1
@@ -108,7 +113,7 @@ download_files() {
 # that could occur when passing the variable back and forth as
 # an argument.
 check_pgp_keys() {
-  echo "Checking for PGP key..."
+  echo "  MESSAGE:  Checking for PGP key..."
   echo ""
 
   if OUT=$(gpg --list-keys 2>/dev/null) &&
@@ -124,12 +129,12 @@ check_pgp_keys() {
 # When using this method:
 # import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
 download_and_import_pgp_keys_from_file() {
-  echo "Importing PGP key from file..."
+  echo "  MESSAGE:  Importing PGP key from file..."
   echo ""
 
   if [ -f $1 ]; then
     mv "$1" "$1.previous"
-    echo "$1 already existed and was renamed to $1.previous"
+    echo "  MESSAGE:  $1 already existed and was renamed to $1.previous"
     echo ""
   fi
 
@@ -139,12 +144,12 @@ download_and_import_pgp_keys_from_file() {
 
   if gpg --import "$1" 2>/dev/null; then
     rm -rf "$1"
-    echo "PGP keys have been successfully imported!"
+    echo "  MESSAGE:  PGP keys have been successfully imported!"
     echo ""
     return 0
   else
-    echo "Failed to import PGP keys to verify package signatures"
-    echo "Check gpg settings and re-run the script"
+    echo "  MESSAGE:  Failed to import PGP key to verify signature"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
     return 1
   fi
 }
@@ -152,16 +157,16 @@ download_and_import_pgp_keys_from_file() {
 # When using this method:
 # import_pgp_keys_from_url $KEY_SERVER_URL
 import_pgp_keys_from_url() {
-  echo "Importing PGP key..."
+  echo "  MESSAGE:  Importing PGP key..."
   echo ""
 
   if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
-    echo "PGP keys have been successfully imported!"
+    echo "  MESSAGE:  PGP keys have been successfully imported!"
     echo ""
     return 0
   else
-    echo "Failed to import PGP keys to verify package signatures"
-    echo "Check gpg settings and re-run the script"
+    echo "  MESSAGE:  Failed to import PGP key to verify signature"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
     return 1
   fi
 }
@@ -169,18 +174,18 @@ import_pgp_keys_from_url() {
 # When using this method:
 # verify_pgp_signature $PGP_FILE_NAME
 verify_pgp_signature() {
-  echo "Verifying PGP signature of $1..."
+  echo "  MESSAGE:  Verifying PGP signature of $1..."
   echo ""
 
   if OUT=$(gpg --status-fd 1 --verify "$1" 2>/dev/null) &&
            echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
-    echo "PGP signature for $1 was GOOD!"
+    echo "  MESSAGE:  PGP signature for $1 was GOOD!"
     echo ""
     unset OUT
     return 0
   else
-    echo "PGP signature for $1 was BAD"
-    echo "Check gpg settings and re-run the script"
+    echo "  MESSAGE:  PGP signature for $1 was BAD"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
     unset OUT
     return 1
   fi
@@ -191,15 +196,18 @@ verify_pgp_signature() {
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
 verify_sha256sum() {
-  echo "Verifying sha256sum of $1..."
+  echo "  MESSAGE:  Verifying sha256sum of $1..."
   echo ""
 
   if sha256sum --check $1 --ignore-missing 2>/dev/null; then
-    echo "$PACKAGE_NAME has been verified and is located in $DOWNLOAD_DIR"
+    echo ""
+    echo "  MESSAGE:  $PACKAGE_NAME has been verified and is located"
+    echo "  MESSAGE:  in $DOWNLOAD_DIR"
     echo ""
     return 0
   else
-    echo "sha256sum check failed for $1"
+    echo ""
+    echo "  MESSAGE:  sha256sum check failed for $1"
     echo ""
     return 1
   fi
@@ -223,14 +231,16 @@ clean_up() {
     if ! [ -z "${ARGUMENTS[$i]}" ]; then
       if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
         $SUDO rm -rf "${ARGUMENTS[$i]}"
-        echo "DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+        echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
       fi
     fi
   done
 }
 
 init() {
+  display_message_for_getting_package $1
   WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+
   if ! source_file "$WORKING_DIR/.env"; then
     return 1
   fi
@@ -260,6 +270,7 @@ ckcc_firmware() {
     if download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
     else
+      unset DOWNLOAD_STRING
       return 1
     fi
 
@@ -280,9 +291,11 @@ ckcc_firmware() {
   if verify_sha256sum "$SIGNATURE_NAME"; then
     clean_up "$SIGNATURE_NAME"
     echo ""
-    echo "Please leave $PACKAGE_NAME in $DOWNLOAD_DIR after you have"
-    echo "updated your device so this script can tell what version"
-    echo "you have installed!"
+    echo "  MESSAGE:  Please leave $PACKAGE_NAME in"
+    echo "  MESSAGE:  $DOWNLOAD_DIR after you have"
+    echo "  MESSAGE:  updated your device so this script can tell what"
+    echo "  MESSAGE:  version you have installed!"
+    echo ""
   else
     clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
     return 1
@@ -298,11 +311,12 @@ ckcc_protocol() {
     local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
 
     if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
-      echo "ckcc-protocol is already up to date with version $LATEST_VERSION!"
+      echo "  MESSAGE:  ckcc-protocol is already up to date"
+      echo "  MESSAGE:  with version $LATEST_VERSION!"
       return 0
     fi
 
-    set_download_dir ~/Downloads
+    set_download_dir ~/Downloads/ckcc-protocol
     change_dir "$DOWNLOAD_DIR"
 
     if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
@@ -310,6 +324,7 @@ ckcc_protocol() {
       if download_files "$DOWNLOAD_STRING"; then
         unset DOWNLOAD_STRING
       else
+        unset DOWNLOAD_STRING
         return 1
       fi
 
@@ -322,24 +337,24 @@ ckcc_protocol() {
 
         if sudo python3 setup.py install; then
           echo ""
-          echo "ckcc-protocol-$LATEST_VERSION has been installed successfully!"
+          echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
           echo ""
           change_dir "$DOWNLOAD_DIR"
           clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
         fi
 
       else
-        echo "Needed python dist packages were not installed. Stopping..."
+        echo "  MESSAGE:  Needed python dist packages were not installed. Stopping..."
         return 1
       fi
 
     else
-      echo "Couldn't extract $PACKAGE_NAME. Stopping..."
+      echo "  MESSAGE:  Couldn't extract $PACKAGE_NAME. Stopping..."
       return 1
     fi
 
   else
-    echo "Python3 version is less than the minimum required (3.6)."
+    echo "  MESSAGE:  Python3 version is less than the minimum required (3.6)."
     return 1
   fi
 
@@ -347,7 +362,7 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
-  if ! source_file "$WORKING_DIR/scripts/check_versions.sh" $CURRENT_VERSION $LATEST_VERSION; then
+  if ! source_file "$WORKING_DIR/scripts/is_new_version_available.sh" $CURRENT_VERSION $LATEST_VERSION; then
     return 1
   fi
 
@@ -355,7 +370,7 @@ wasabi_wallet() {
     return 1
   fi
 
-  set_download_dir ~/Downloads
+  set_download_dir ~/Downloads/wasabi-wallet
   change_dir "$DOWNLOAD_DIR"
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
@@ -364,6 +379,7 @@ wasabi_wallet() {
     if download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
     else
+      unset DOWNLOAD_STRING
       return 1
     fi
 
@@ -383,12 +399,12 @@ wasabi_wallet() {
 
   if sudo dpkg -i $PACKAGE_NAME; then
     echo ""
-    echo "$PACKAGE_NAME has been installed successfully!"
+    echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
     echo ""
     clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
   else
     echo ""
-    echo "Something went wrong when installing $PACKAGE_NAME"
+    echo "  MESSAGE:  Something went wrong when installing $PACKAGE_NAME"
     return 1
   fi
 
@@ -396,18 +412,22 @@ wasabi_wallet() {
 }
 
 help() {
-  echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
+  echo ""
+  echo "$ ./get_latest.sh [PACKAGE-NAME] [OPTION1] [OPTION2] ..."
   echo ""
   echo "[PACKAGE-NAME]:"
   echo ""
-  echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
-  echo "                           of Wasabi Wallet."
+  echo "    get-all .  .  .  .  .  Cycles through all of the below listed"
+  echo "                           packages & updates/installs them."
   echo ""
   echo "    ckcc-firmware .  .  .  Downloads and verifies the latest"
   echo "                           Coldcard firmware."
   echo ""
   echo "    ckcc-protocol .  .  .  Installs the latest Coldcard protocol"
   echo "                           (primarily needed for Electrum Wallet)."
+  echo ""
+  echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
+  echo "                           of Wasabi Wallet."
   echo ""
   echo "[OPTIONS]:"
   echo ""
@@ -421,12 +441,33 @@ help() {
   echo "                           Setting this option will skip the check"
   echo "                           and make downloads over clearnet."
   echo ""
-  echo "    --only-tor    .  .  .  This flag will only use tor to download"
-  echo "                           packages. If the connectivity check fails,"
-  echo "                           the script exits."
+  echo "    --only-tor    .  .  .  Will only use tor to download packages."
+  echo "                           If the connectivity check fails, the"
+  echo "                           script exits."
+  echo ""
+  echo ""
 }
 
 case $SCRIPT_PACKAGE in
+  "get-all")
+    if init "ckcc-firmware"; then
+      ckcc_firmware "ckcc-firmware"
+    fi
+    echo ""
+    cd $WORKING_DIR
+
+    if init "ckcc-protocol"; then
+      ckcc_protocol "ckcc-protocol"
+    fi
+    echo ""
+    cd $WORKING_DIR
+
+    if init "wasabi-wallet"; then
+      wasabi_wallet "wasabi-wallet"
+    fi
+    echo ""
+    cd $WORKING_DIR
+    ;;
   "ckcc-firmware")
     if init $SCRIPT_PACKAGE; then
       ckcc_firmware $SCRIPT_PACKAGE

@@ -1,8 +1,9 @@
 #!/bin/bash
 
 stop_install() {
-  echo "An update to $LATEST_VERSION is available"
-  echo "Please exit $1 at your earliest convience and re-run this script"
+  echo "  MESSAGE:  An update to $LATEST_VERSION is available."
+  echo "  MESSAGE:  Please exit $1 at your earliest"
+  echo "  MESSAGE:  convience and re-run this script"
 }
 
 case $1 in
