@@ -64,7 +64,7 @@ check_for_already_downloaded_package() {
   for ((i=0; i < $#; i+=2)); do
     if ! [ -z "${ARGUMENTS[$i]}" ]; then
       if ! [ -f "${ARGUMENTS[$i]}" ]; then
-        local DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
+        DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
         let COUNTER++
       fi
     fi
@@ -73,15 +73,10 @@ check_for_already_downloaded_package() {
   if [ $COUNTER -eq 0 ]; then
     echo "Packages are already downloaded"
     echo ""
+    return 0
   else
-
-    if ! download_files "$DOWNLOAD_STRING"; then
-      return 1
-    fi
-
+    return 1
   fi
-
-  return 0
 }
 
 # When using this method:
@@ -237,9 +232,16 @@ init() {
 ckcc_firmware() {
   set_download_dir ~/Coldcard-firmware
   change_dir "$DOWNLOAD_DIR"
+
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                          "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
-    return 1
+                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+
+    if download_files "$DOWNLOAD_STRING"; then
+      unset DOWNLOAD_STRING
+    else
+      return 1
+    fi
+
   fi
 
   if ! check_pgp_keys; then
@@ -282,8 +284,14 @@ wasabi_wallet() {
   change_dir "$DOWNLOAD_DIR"
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                       "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
-    return 1
+                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+
+    if download_files "$DOWNLOAD_STRING"; then
+      unset DOWNLOAD_STRING
+    else
+      return 1
+    fi
+
   fi
 
   if ! check_pgp_keys; then
