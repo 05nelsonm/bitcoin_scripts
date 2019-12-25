@@ -52,6 +52,9 @@ change_dir() {
 # Format when sending to this method:
 # check_for_existing_package $PACKAGE_NAME $DOWNLOAD_URL $PACKAGE_2_NAME $DOWNLOAD_2_URL ...
 check_for_existing_package() {
+  echo "Checking for existing package(s)..."
+  echo ""
+
   local ARGUMENTS=( "$@" )
   local COUNTER=0
   for ((i=0; i < $#; i+=2)); do
@@ -72,11 +75,11 @@ check_for_existing_package() {
 }
 
 download_files() {
-  echo "Downloading packages to $DOWNLOAD_DIR"
+  echo "Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
 
   if ! $WGET_TOR_FLAG wget $@; then
-    echo "Something went wrong with the download."
+    echo "Something went wrong with the download"
 
     if [ $WGET_TOR_FLAG != "" ]; then
       echo "Try executing 'sudo service tor restart' and re-running the script"
@@ -87,6 +90,9 @@ download_files() {
 }
 
 check_pgp_keys() {
+  echo "Checking for PGP key..."
+  echo ""
+
   if OUT=$(gpg --list-keys 2>/dev/null) &&
            echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
     unset OUT
@@ -98,6 +104,9 @@ check_pgp_keys() {
 }
 
 import_pgp_keys_from_file() {
+  echo "Importing PGP key from file..."
+  echo ""
+
   if [ -f $1 ]; then
     mv "$1" "$1.previous"
     echo "$1 already existed and was renamed to $1.previous"
@@ -107,39 +116,48 @@ import_pgp_keys_from_file() {
   download_files "$2"
   if gpg --import "$1" 2>/dev/null; then
     rm -rf "$1"
-    echo "PGP keys have been successfully imported"
+    echo "PGP keys have been successfully imported!"
     echo ""
   else
     echo "Failed to import PGP keys to verify package signatures"
-    echo "Check your gpg settings and re-run the script"
+    echo "Check gpg settings and re-run the script"
     exit 1
   fi
 }
 
 import_pgp_keys_from_url() {
-  if curl -s $CURL_TOR_FLAG $PGP_IMPORT_URL | gpg --import 2>/dev/null; then
-    echo "PGP keys have been successfully imported"
+  echo "Importing PGP key..."
+  echo ""
+
+  if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
+    echo "PGP keys have been successfully imported!"
     echo ""
   else
     echo "Failed to import PGP keys to verify package signatures"
-    echo "Check your gpg settings and re-run the script"
+    echo "Check gpg settings and re-run the script"
     exit 1
   fi
 }
 
 verify_signature() {
+  echo "Verifying PGP signature of $1..."
+  echo ""
+
   if OUT=$(gpg --status-fd 1 --verify "$1" 2>/dev/null) &&
            echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
-    echo "PGP signatures were GOOD"
+    echo "PGP signature for $1 was GOOD!"
     echo ""
   else
-    echo "PGP signature were BAD"
-    echo "Check your gpg settings and re-run the script"
+    echo "PGP signature for $1 was BAD"
+    echo "Check gpg settings and re-run the script"
     exit 1
   fi
 }
 
 verify_sha256sum() {
+  echo "Verifying sha256sum of $1..."
+  echo ""
+
   if sha256sum --check $1 --ignore-missing 2>/dev/null; then
     echo "$PACKAGE_NAME	has been verified and is located in $DOWNLOAD_DIR"
     echo ""
