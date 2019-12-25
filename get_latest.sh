@@ -134,7 +134,7 @@ clean_up() {
 }
 
 wasabi() {
-#  source_file "$WORKING_DIR/scripts/check_versions.sh"
+  source_file "$WORKING_DIR/scripts/check_versions.sh"
   source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
