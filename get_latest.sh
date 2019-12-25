@@ -128,6 +128,11 @@ verify_signature() {
   fi
 }
 
+clean_up() {
+  rm -rf $@
+  echo "$DOWNLOAD_DIR has been cleaned up"
+}
+
 wasabi() {
 #  source_file "$WORKING_DIR/scripts/check_versions.sh"
   source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
@@ -142,6 +147,15 @@ wasabi() {
   fi
 
   verify_signature "$SIGNATURE_NAME"
+  if sudo dpkg -i $PACKAGE_NAME; then
+    echo ""
+    echo "$PACKAGE_NAME has been installed successfully!"
+    echo ""
+    clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
+  else
+    echo ""
+    echo "Something went wrong when installing $PACKAGE_NAME"
+  fi
 }
 
 help() {
