@@ -37,3 +37,5 @@ if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
   fi
 
 fi
+
+return 0

@@ -4,9 +4,17 @@ SCRIPT_PACKAGE=$1; shift
 SCRIPT_OPTIONS=( $@ )
 
 source_file() {
-  local FILE=$1
+  local FILE=$1; shift
+  local ARGUMENTS=( $@ )
+
   if [ -f $FILE ]; then
-    source $FILE $2 $3 $4
+
+    if source $FILE ${ARGUMENTS[*]}; then
+      return 0
+    else
+      return 1
+    fi
+
   else
     echo "Unable to find file $FILE"
     exit 1
@@ -63,11 +71,17 @@ check_for_already_downloaded_package() {
   done
 
   if [ $COUNTER -eq 0 ]; then
-    echo "Packages are already downloaded. Re-verifying them!"
+    echo "Packages are already downloaded"
     echo ""
   else
-    download_files "$DOWNLOAD_STRING"
+
+    if ! download_files "$DOWNLOAD_STRING"; then
+      return 1
+    fi
+
   fi
+
+  return 0
 }
 
 # When using this method:
@@ -76,14 +90,16 @@ download_files() {
   echo "Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
 
-  if ! $WGET_TOR_FLAG wget $@; then
+  if $WGET_TOR_FLAG wget $@; then
+    return 0
+  else
     echo "Something went wrong with the download"
 
     if [ $WGET_TOR_FLAG != "" ]; then
       echo "Try executing 'sudo service tor restart' and re-running the script"
     fi
 
-    exit 1
+    return 1
   fi
 }
 
@@ -113,15 +129,19 @@ import_pgp_keys_from_file() {
     echo ""
   fi
 
-  download_files "$2"
+  if ! download_files "$2"; then
+    return 1
+  fi
+
   if gpg --import "$1" 2>/dev/null; then
     rm -rf "$1"
     echo "PGP keys have been successfully imported!"
     echo ""
+    return 0
   else
     echo "Failed to import PGP keys to verify package signatures"
     echo "Check gpg settings and re-run the script"
-    exit 1
+    return 1
   fi
 }
 
@@ -134,10 +154,11 @@ import_pgp_keys_from_url() {
   if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
     echo "PGP keys have been successfully imported!"
     echo ""
+    return 0
   else
     echo "Failed to import PGP keys to verify package signatures"
     echo "Check gpg settings and re-run the script"
-    exit 1
+    return 1
   fi
 }
 
@@ -149,10 +170,13 @@ verify_pgp_signature() {
            echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
     echo "PGP signature for $1 was GOOD!"
     echo ""
+    unset OUT
+    return 0
   else
     echo "PGP signature for $1 was BAD"
     echo "Check gpg settings and re-run the script"
-    exit 1
+    unset OUT
+    return 1
   fi
 }
 
@@ -165,12 +189,13 @@ verify_sha256sum() {
   echo ""
 
   if sha256sum --check $1 --ignore-missing 2>/dev/null; then
-    echo "$PACKAGE_NAME	has been verified and is located in $DOWNLOAD_DIR"
+    echo "$PACKAGE_NAME has been verified and is located in $DOWNLOAD_DIR"
     echo ""
+    return 0
   else
     echo "sha256sum check failed for $1"
     echo ""
-    exit 1
+    return 1
   fi
 }
 
@@ -181,25 +206,53 @@ clean_up() {
 
 init() {
   WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
-  source_file "$WORKING_DIR/.env"
-  source_file "$WORKING_DIR/scripts/set_tor_options.sh"
-  source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
-  source_file "$WORKING_DIR/scripts/project_info.sh" $1
+  if ! source_file "$WORKING_DIR/.env"; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $1; then
+    return 1
+  fi
+
+  return 0
 }
 
 ckcc_firmware() {
   set_download_dir ~/Coldcard-firmware
   change_dir "$DOWNLOAD_DIR"
-  check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                       "$SIGNATURE_NAME" "$SIGNATURE_URL"
-
-  if ! check_pgp_keys; then
-    import_pgp_keys_from_url "$PGP_IMPORT_URL"
+  if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                                          "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+    return 1
   fi
 
-  verify_pgp_signature "$SIGNATURE_NAME"
-  verify_sha256sum "$SIGNATURE_NAME"
-  clean_up "$SIGNATURE_NAME"
+  if ! check_pgp_keys; then
+
+    if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
+      return 1
+    fi
+
+  fi
+
+  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+    return 1
+  fi
+
+  if verify_sha256sum "$SIGNATURE_NAME"; then
+    clean_up "$SIGNATURE_NAME"
+  else
+    clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
+    return 1
+  fi
+
+  return 0
 }
 
 ckcc_protocol() {
@@ -208,19 +261,34 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
-  source_file "$WORKING_DIR/scripts/check_versions.sh" $CURRENT_VERSION $LATEST_VERSION
-  source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
+  if ! source_file "$WORKING_DIR/scripts/check_versions.sh" $CURRENT_VERSION $LATEST_VERSION; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
+    return 1
+  fi
+
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
 
-  check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                       "$SIGNATURE_NAME" "$SIGNATURE_URL"
-
-  if ! check_pgp_keys; then
-    import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
+  if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                                       "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+    return 1
   fi
 
-  verify_pgp_signature "$SIGNATURE_NAME"
+  if ! check_pgp_keys; then
+
+    if ! import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
+      return 1
+    fi
+
+  fi
+
+  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+    return 1
+  fi
+
   if sudo dpkg -i $PACKAGE_NAME; then
     echo ""
     echo "$PACKAGE_NAME has been installed successfully!"
@@ -229,7 +297,10 @@ wasabi_wallet() {
   else
     echo ""
     echo "Something went wrong when installing $PACKAGE_NAME"
+    return 1
   fi
+
+  return 0
 }
 
 help() {
@@ -261,22 +332,23 @@ help() {
   echo "    --only-tor    .  .  .  This flag will only use tor to download"
   echo "                           packages. If the connectivity check fails,"
   echo "                           the script exits."
-
-  exit 0
 }
 
 case $SCRIPT_PACKAGE in
   "ckcc-firmware")
-    init $SCRIPT_PACKAGE
-    ckcc_firmware $SCRIPT_PACKAGE
+    if init $SCRIPT_PACKAGE; then
+      ckcc_firmware $SCRIPT_PACKAGE
+    fi
     ;;
   "ckcc-protocol")
-    init $SCRIPT_PACKAGE
-    ckcc_protocol $SCRIPT_PACKAGE
+    if init $SCRIPT_PACKAGE; then
+      ckcc_protocol $SCRIPT_PACKAGE
+    fi
     ;;
   "wasabi-wallet")
-    init $SCRIPT_PACKAGE
-    wasabi_wallet $SCRIPT_PACKAGE
+    if init $SCRIPT_PACKAGE; then
+      wasabi_wallet $SCRIPT_PACKAGE
+    fi
     ;;
   *)
     help

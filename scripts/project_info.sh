@@ -69,3 +69,5 @@ case $1 in
     SIGNATURE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$SIGNATURE_NAME"
     ;;
 esac
+
+return 0
