@@ -1,12 +1,24 @@
 #!/bin/bash
 
-SCRIPT_OPTIONS=($2 $3 $4 $5 $6)
+SCRIPT_PACKAGE=$1; shift
+SCRIPT_OPTIONS=( $@ )
 
+# When using this method:
+# source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
 source_file() {
-  if [ -f $1 ]; then
-    source $1 $2
+  local FILE=$1; shift
+  local ARGUMENTS=( $@ )
+
+  if [ -f $FILE ]; then
+
+    if source $FILE ${ARGUMENTS[*]}; then
+      return 0
+    else
+      return 1
+    fi
+
   else
-    echo "Unable to find file $1"
+    echo "Unable to find file $FILE"
     exit 1
   fi
 }
@@ -21,14 +33,6 @@ contains() {
 
   unset VALUE
   return 1
-}
-
-init() {
-  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
-  source_file "$WORKING_DIR/.env"
-  source_file "$WORKING_DIR/scripts/set_tor_options.sh"
-  source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
-  source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
 set_download_dir() {
@@ -49,46 +53,60 @@ change_dir() {
   fi
 }
 
-# Format when sending to this method:
-# check_for_existing_package $PACKAGE_NAME $DOWNLOAD_URL $PACKAGE_2_NAME $DOWNLOAD_2_URL ...
-check_for_existing_package() {
-  echo "Checking for existing package(s)..."
+# When using this method:
+# check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
+#                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
+#                                      ...
+check_for_already_downloaded_package() {
+  echo "Checking if package(s) have already been downloaded..."
   echo ""
 
-  local ARGUMENTS=( "$@" )
+  local ARGUMENTS=( $@ )
   local COUNTER=0
   for ((i=0; i < $#; i+=2)); do
-    if ! [ -f "${ARGUMENTS[$i]}" ]; then
-      if ! [ -z "${ARGUMENTS[$i]}" ]; then
-        local DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
+    if ! [ -z "${ARGUMENTS[$i]}" ]; then
+      if ! [ -f "${ARGUMENTS[$i]}" ]; then
+        DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
         let COUNTER++
       fi
     fi
   done
 
   if [ $COUNTER -eq 0 ]; then
-    echo "Packages are already downloaded. Re-verifying them!"
+    echo "Packages are already downloaded"
     echo ""
+    return 0
   else
-    download_files "$DOWNLOAD_STRING"
+    return 1
   fi
 }
 
+# When using this method:
+# download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
+#
+# Can also use string concatenation for a single argument
+# if URLs are separated by spaces.
 download_files() {
   echo "Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
 
-  if ! $WGET_TOR_FLAG wget $@; then
+  if $WGET_TOR_FLAG wget $@; then
+    return 0
+  else
     echo "Something went wrong with the download"
 
     if [ $WGET_TOR_FLAG != "" ]; then
       echo "Try executing 'sudo service tor restart' and re-running the script"
     fi
 
-    exit 1
+    return 1
   fi
 }
 
+# $PGP_KEY_FINGERPRINT must be set by scripts/project_info.sh
+# to mitigate potential modification of PGP key fingerprints
+# that could occur when passing the variable back and forth as
+# an argument.
 check_pgp_keys() {
   echo "Checking for PGP key..."
   echo ""
@@ -103,7 +121,9 @@ check_pgp_keys() {
   fi
 }
 
-import_pgp_keys_from_file() {
+# When using this method:
+# import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
+download_and_import_pgp_keys_from_file() {
   echo "Importing PGP key from file..."
   echo ""
 
@@ -113,18 +133,24 @@ import_pgp_keys_from_file() {
     echo ""
   fi
 
-  download_files "$2"
+  if ! download_files "$2"; then
+    return 1
+  fi
+
   if gpg --import "$1" 2>/dev/null; then
     rm -rf "$1"
     echo "PGP keys have been successfully imported!"
     echo ""
+    return 0
   else
     echo "Failed to import PGP keys to verify package signatures"
     echo "Check gpg settings and re-run the script"
-    exit 1
+    return 1
   fi
 }
 
+# When using this method:
+# import_pgp_keys_from_url $KEY_SERVER_URL
 import_pgp_keys_from_url() {
   echo "Importing PGP key..."
   echo ""
@@ -132,14 +158,17 @@ import_pgp_keys_from_url() {
   if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
     echo "PGP keys have been successfully imported!"
     echo ""
+    return 0
   else
     echo "Failed to import PGP keys to verify package signatures"
     echo "Check gpg settings and re-run the script"
-    exit 1
+    return 1
   fi
 }
 
-verify_signature() {
+# When using this method:
+# verify_pgp_signature $PGP_FILE_NAME
+verify_pgp_signature() {
   echo "Verifying PGP signature of $1..."
   echo ""
 
@@ -147,46 +176,211 @@ verify_signature() {
            echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
     echo "PGP signature for $1 was GOOD!"
     echo ""
+    unset OUT
+    return 0
   else
     echo "PGP signature for $1 was BAD"
     echo "Check gpg settings and re-run the script"
-    exit 1
+    unset OUT
+    return 1
   fi
 }
 
+# When using this method:
+# verify_sha256sum $SHA256SUM_FILE
+#
+# The files it will be checking must all be in the same directory as $SHA256SUM_FILE
 verify_sha256sum() {
   echo "Verifying sha256sum of $1..."
   echo ""
 
   if sha256sum --check $1 --ignore-missing 2>/dev/null; then
-    echo "$PACKAGE_NAME	has been verified and is located in $DOWNLOAD_DIR"
+    echo "$PACKAGE_NAME has been verified and is located in $DOWNLOAD_DIR"
     echo ""
+    return 0
   else
     echo "sha256sum check failed for $1"
     echo ""
-    exit 1
+    return 1
   fi
 }
 
+# When using this method:
+# clean_up $FILE_1 $FILE_2 ...
+#
+# Can also send `--sudo` as the first argument to
+# make this method call `sudo rm -rf ...`
 clean_up() {
-  rm -rf $@
-  echo "$DOWNLOAD_DIR has been cleaned up"
+  if [ $1 = --sudo ]; then
+    local SUDO="sudo"
+    shift
+  fi
+
+  local ARGUMENTS=( $@ )
+  local CLEAN_UP_DIR=$(pwd)
+
+  for ((i=0; i < $#; i++)); do
+    if ! [ -z "${ARGUMENTS[$i]}" ]; then
+      if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
+        $SUDO rm -rf "${ARGUMENTS[$i]}"
+        echo "DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+      fi
+    fi
+  done
 }
 
-wasabi() {
-  source_file "$WORKING_DIR/scripts/check_versions.sh"
-  source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
+init() {
+  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+  if ! source_file "$WORKING_DIR/.env"; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $1; then
+    return 1
+  fi
+
+  return 0
+}
+
+ckcc_firmware() {
+  set_download_dir ~/Coldcard-firmware
+  change_dir "$DOWNLOAD_DIR"
+
+  if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+
+    if download_files "$DOWNLOAD_STRING"; then
+      unset DOWNLOAD_STRING
+    else
+      return 1
+    fi
+
+  fi
+
+  if ! check_pgp_keys; then
+
+    if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
+      return 1
+    fi
+
+  fi
+
+  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+    return 1
+  fi
+
+  if verify_sha256sum "$SIGNATURE_NAME"; then
+    clean_up "$SIGNATURE_NAME"
+    echo ""
+    echo "Please leave $PACKAGE_NAME in $DOWNLOAD_DIR after you have"
+    echo "updated your device so this script can tell what version"
+    echo "you have installed!"
+  else
+    clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
+    return 1
+  fi
+
+  return 0
+}
+
+ckcc_protocol() {
+  local PYTHON_3_VERSION=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f 2)
+
+  if [ $PYTHON_3_VERSION -gt 5 ]; then
+    local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
+
+    if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
+      echo "ckcc-protocol is already up to date with version $LATEST_VERSION!"
+      return 0
+    fi
+
+    set_download_dir ~/Downloads
+    change_dir "$DOWNLOAD_DIR"
+
+    if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
+
+      if download_files "$DOWNLOAD_STRING"; then
+        unset DOWNLOAD_STRING
+      else
+        return 1
+      fi
+
+    fi
+
+    if tar -xzf $PACKAGE_NAME; then
+      cd Coldcard-ckcc-protocol-*
+
+      if pip install -r requirements.txt; then
+
+        if sudo python3 setup.py install; then
+          echo ""
+          echo "ckcc-protocol-$LATEST_VERSION has been installed successfully!"
+          echo ""
+          change_dir "$DOWNLOAD_DIR"
+          clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
+        fi
+
+      else
+        echo "Needed python dist packages were not installed. Stopping..."
+        return 1
+      fi
+
+    else
+      echo "Couldn't extract $PACKAGE_NAME. Stopping..."
+      return 1
+    fi
+
+  else
+    echo "Python3 version is less than the minimum required (3.6)."
+    return 1
+  fi
+
+  return 0
+}
+
+wasabi_wallet() {
+  if ! source_file "$WORKING_DIR/scripts/check_versions.sh" $CURRENT_VERSION $LATEST_VERSION; then
+    return 1
+  fi
+
+  if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
+    return 1
+  fi
+
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
 
-  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
+  if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
 
-  if ! check_pgp_keys; then
-    import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
+    if download_files "$DOWNLOAD_STRING"; then
+      unset DOWNLOAD_STRING
+    else
+      return 1
+    fi
+
   fi
 
-  verify_signature "$SIGNATURE_NAME"
+  if ! check_pgp_keys; then
+
+    if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
+      return 1
+    fi
+
+  fi
+
+  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+    return 1
+  fi
+
   if sudo dpkg -i $PACKAGE_NAME; then
     echo ""
     echo "$PACKAGE_NAME has been installed successfully!"
@@ -195,35 +389,28 @@ wasabi() {
   else
     echo ""
     echo "Something went wrong when installing $PACKAGE_NAME"
-  fi
-}
-
-ckcc_firmware() {
-  set_download_dir ~/Coldcard-firmware
-  change_dir "$DOWNLOAD_DIR"
-  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
-
-  if ! check_pgp_keys; then
-    import_pgp_keys_from_url "$PGP_IMPORT_URL"
+    return 1
   fi
 
-  verify_signature "$SIGNATURE_NAME"
-  verify_sha256sum "$SIGNATURE_NAME"
-  clean_up "$SIGNATURE_NAME"
+  return 0
 }
 
 help() {
   echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
   echo ""
   echo "[PACKAGE-NAME]:"
+  echo ""
   echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
-  echo "                           of Wasabi Wallet"
+  echo "                           of Wasabi Wallet."
   echo ""
   echo "    ckcc-firmware .  .  .  Downloads and verifies the latest"
-  echo "                           Coldcard firmware"
+  echo "                           Coldcard firmware."
+  echo ""
+  echo "    ckcc-protocol .  .  .  Installs the latest Coldcard protocol"
+  echo "                           (primarily needed for Electrum Wallet)."
   echo ""
   echo "[OPTIONS]:"
+  echo ""
   echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
   echo "                           connectivity check will be done."
   echo ""
@@ -237,18 +424,23 @@ help() {
   echo "    --only-tor    .  .  .  This flag will only use tor to download"
   echo "                           packages. If the connectivity check fails,"
   echo "                           the script exits."
-
-  exit 0
 }
 
-case $1 in
-  "wasabi-wallet")
-    init $1
-    wasabi $1
-    ;;
+case $SCRIPT_PACKAGE in
   "ckcc-firmware")
-    init $1
-    ckcc_firmware $1
+    if init $SCRIPT_PACKAGE; then
+      ckcc_firmware $SCRIPT_PACKAGE
+    fi
+    ;;
+  "ckcc-protocol")
+    if init $SCRIPT_PACKAGE; then
+      ckcc_protocol $SCRIPT_PACKAGE
+    fi
+    ;;
+  "wasabi-wallet")
+    if init $SCRIPT_PACKAGE; then
+      wasabi_wallet $SCRIPT_PACKAGE
+    fi
     ;;
   *)
     help
