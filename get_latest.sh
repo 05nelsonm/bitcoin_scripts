@@ -84,8 +84,6 @@ download_files() {
 
     exit 1
   fi
-
-  echo ""
 }
 
 check_pgp_keys() {
@@ -131,19 +129,19 @@ verify_signature() {
 }
 
 wasabi() {
-  source_file "$WORKING_DIR/scripts/check_versions.sh"
+#  source_file "$WORKING_DIR/scripts/check_versions.sh"
   source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
 
-  check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
-                             "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL"
+  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
 
   if ! check_pgp_keys; then
     import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
   fi
 
-  verify_signature "$LATEST_PACKAGE_NAME.asc"
+  verify_signature "$SIGNATURE_NAME"
 }
 
 help() {
