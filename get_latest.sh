@@ -291,9 +291,9 @@ ckcc_protocol() {
   local PYTHON_3_VERSION=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f 2)
 
   if [ $PYTHON_3_VERSION -gt 5 ]; then
-    local DIST-PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
+    local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
 
-    if [ -f "$DIST-PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
+    if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
       echo "ckcc-protocol is already up to date with version $LATEST_VERSION!"
       return 0
     fi
@@ -321,7 +321,7 @@ ckcc_protocol() {
           echo "ckcc-protocol-$LATEST_VERSION has been installed successfully!"
           echo ""
           change_dir "$DOWNLOAD_DIR"
-          clean_up "--sudo" "Coldcard-ckcc-protocol-*" "$PACKAGE_NAME"
+          clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
         fi
 
       else
