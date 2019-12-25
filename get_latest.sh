@@ -113,7 +113,19 @@ import_pgp_keys_from_file() {
     echo ""
   else
     echo "Failed to import PGP keys to verify package signatures"
-    echo "Check your gpg package settings and re-run the script"
+    echo "Check your gpg settings and re-run the script"
+    exit 1
+  fi
+}
+
+verify_signature() {
+  if OUT=$(gpg --status-fd 1 --verify "$1" 2>/dev/null) &&
+           echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
+    echo "PGP signatures were GOOD"
+    echo ""
+  else
+    echo "PGP signature were BAD"
+    echo "Check your gpg settings and re-run the script"
     exit 1
   fi
 }
@@ -131,7 +143,7 @@ wasabi() {
     import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
   fi
 
-  echo "verify signatures next"
+  verify_signature "$LATEST_PACKAGE_NAME.asc"
 }
 
 help() {
