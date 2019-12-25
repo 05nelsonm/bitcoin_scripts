@@ -161,11 +161,14 @@ wasabi() {
 help() {
   echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
   echo ""
-  echo "    [PACKAGE-NAME]:"
+  echo "[PACKAGE-NAME]:"
   echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
   echo "                           of Wasabi Wallet"
   echo ""
-  echo "    [OPTIONS]:"
+  echo "    ckcc-firmware .  .  .  Downloads and verifies the latest"
+  echo "                           Coldcard firmware"
+  echo ""
+  echo "[OPTIONS]:"
   echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
   echo "                           connectivity check will be done."
   echo ""
@@ -187,6 +190,9 @@ case $1 in
   "wasabi-wallet")
     init $1
     wasabi $1
+    ;;
+  "ckcc-firmware")
+    init $1
     ;;
   *)
     help
