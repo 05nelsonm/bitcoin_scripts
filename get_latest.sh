@@ -23,14 +23,6 @@ contains() {
   return 1
 }
 
-init() {
-  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
-  source_file "$WORKING_DIR/.env"
-  source_file "$WORKING_DIR/scripts/set_tor_options.sh"
-  source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
-  source_file "$WORKING_DIR/scripts/project_info.sh" $1
-}
-
 set_download_dir() {
   DOWNLOAD_DIR=$1
 }
@@ -139,7 +131,7 @@ import_pgp_keys_from_url() {
   fi
 }
 
-verify_signature() {
+verify_pgp_signature() {
   echo "Verifying PGP signature of $1..."
   echo ""
 
@@ -173,29 +165,12 @@ clean_up() {
   echo "$DOWNLOAD_DIR has been cleaned up"
 }
 
-wasabi() {
-  source_file "$WORKING_DIR/scripts/check_versions.sh"
-  source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
-  set_download_dir ~/Downloads
-  change_dir "$DOWNLOAD_DIR"
-
-  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
-
-  if ! check_pgp_keys; then
-    import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
-  fi
-
-  verify_signature "$SIGNATURE_NAME"
-  if sudo dpkg -i $PACKAGE_NAME; then
-    echo ""
-    echo "$PACKAGE_NAME has been installed successfully!"
-    echo ""
-    clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
-  else
-    echo ""
-    echo "Something went wrong when installing $PACKAGE_NAME"
-  fi
+init() {
+  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+  source_file "$WORKING_DIR/.env"
+  source_file "$WORKING_DIR/scripts/set_tor_options.sh"
+  source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1
+  source_file "$WORKING_DIR/scripts/project_info.sh" $1
 }
 
 ckcc_firmware() {
@@ -208,9 +183,34 @@ ckcc_firmware() {
     import_pgp_keys_from_url "$PGP_IMPORT_URL"
   fi
 
-  verify_signature "$SIGNATURE_NAME"
+  verify_pgp_signature "$SIGNATURE_NAME"
   verify_sha256sum "$SIGNATURE_NAME"
   clean_up "$SIGNATURE_NAME"
+}
+
+wasabi_wallet() {
+  source_file "$WORKING_DIR/scripts/check_versions.sh"
+  source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
+  set_download_dir ~/Downloads
+  change_dir "$DOWNLOAD_DIR"
+
+  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
+
+  if ! check_pgp_keys; then
+    import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
+  fi
+
+  verify_pgp_signature "$SIGNATURE_NAME"
+  if sudo dpkg -i $PACKAGE_NAME; then
+    echo ""
+    echo "$PACKAGE_NAME has been installed successfully!"
+    echo ""
+    clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
+  else
+    echo ""
+    echo "Something went wrong when installing $PACKAGE_NAME"
+  fi
 }
 
 help() {
@@ -242,13 +242,13 @@ help() {
 }
 
 case $1 in
-  "wasabi-wallet")
-    init $1
-    wasabi $1
-    ;;
   "ckcc-firmware")
     init $1
     ckcc_firmware $1
+    ;;
+  "wasabi-wallet")
+    init $1
+    wasabi_wallet $1
     ;;
   *)
     help
