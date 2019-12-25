@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [[ $SET_TOR_COUNTER -ne 0 ]]; then
-  return 0
-fi
-
 if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
 
   if  command -v tor 1>/dev/null; then
@@ -42,5 +38,4 @@ if ! contains "$SCRIPT_OPTIONS" "--no-tor"; then
 
 fi
 
-let SET_TOR_COUNTER++
 return 0

@@ -2,9 +2,9 @@
 
 SCRIPT_PACKAGE=$1; shift
 SCRIPT_OPTIONS=( $@ )
-SET_TOR_COUNTER=0
+INIT_COUNTER=0
 
-display_message_for_getting_package() {
+display_title_message() {
   echo ""
   echo "============================================================================"
   echo ""
@@ -238,15 +238,21 @@ clean_up() {
 }
 
 init() {
-  display_message_for_getting_package $1
-  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+  display_title_message $1
 
-  if ! source_file "$WORKING_DIR/.env"; then
-    return 1
-  fi
+  if [ $INIT_COUNTER -eq 0 ]; then
 
-  if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
-    return 1
+    WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+
+    if ! source_file "$WORKING_DIR/.env"; then
+      return 1
+    fi
+
+    if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
+      return 1
+    fi
+
+  let INIT_COUNTER++
   fi
 
   if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
