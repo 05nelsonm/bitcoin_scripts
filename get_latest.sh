@@ -3,6 +3,8 @@
 SCRIPT_PACKAGE=$1; shift
 SCRIPT_OPTIONS=( $@ )
 
+# When using this method:
+# source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
 source_file() {
   local FILE=$1; shift
   local ARGUMENTS=( $@ )
@@ -52,7 +54,7 @@ change_dir() {
 }
 
 # When using this method:
-# check_for_already_downloaded_package $PACKAGE_NAME $DOWNLOAD_URL \
+# check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
 #                                      ...
 check_for_already_downloaded_package() {
@@ -81,6 +83,9 @@ check_for_already_downloaded_package() {
 
 # When using this method:
 # download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
+#
+# Can also use string concatenation for a single argument
+# if URLs are separated by spaces.
 download_files() {
   echo "Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
@@ -98,6 +103,10 @@ download_files() {
   fi
 }
 
+# $PGP_KEY_FINGERPRINT must be set by scripts/project_info.sh
+# to mitigate potential modification of PGP key fingerprints
+# that could occur when passing the variable back and forth as
+# an argument.
 check_pgp_keys() {
   echo "Checking for PGP key..."
   echo ""
@@ -157,6 +166,8 @@ import_pgp_keys_from_url() {
   fi
 }
 
+# When using this method:
+# verify_pgp_signature $PGP_FILE_NAME
 verify_pgp_signature() {
   echo "Verifying PGP signature of $1..."
   echo ""
@@ -194,6 +205,8 @@ verify_sha256sum() {
   fi
 }
 
+# When using this method:
+# clean_up $FILE_1 $FILE_2 ...
 clean_up() {
   local ARGUMENTS=( $@ )
   local CLEAN_UP_DIR=$(pwd)
