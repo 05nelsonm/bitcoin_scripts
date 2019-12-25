@@ -8,6 +8,11 @@ latest_version_error_message() {
   echo "  MESSAGE:  and re-run the script"
 }
 
+unset PGP_KEY_FINGERPRINT PGP_IMPORT_URL CURRENT_VERSION \
+      LATEST_VERSION PACKAGE_NAME PACKAGE_URL \
+      SIGNATURE_NAME SIGNATURE_URL PGP_FILE_NAME \
+      PGP_FILE_URL
+
 case $1 in
 
   ## Information obtained from:
@@ -58,6 +63,7 @@ case $1 in
     PACKAGE_NAME="v$LATEST_VERSION"
     PACKAGE_URL=$(echo "$LATEST_RELEASE_JSON" | jq -r '.tarball_url')
 
+    unset LATEST_RELEASE_JSON
     #SIGNATURE_NAME=
     #SIGNATURE_URL=
     ;;
