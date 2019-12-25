@@ -21,7 +21,7 @@ get_dependencies() {
     fi
 
   else
-    echo "All needed packages present"
+    echo "All needed dependencies are present!"
     echo ""
     return 0
   fi
