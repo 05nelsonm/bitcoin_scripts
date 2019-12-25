@@ -196,7 +196,7 @@ verify_pgp_signature() {
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
 verify_sha256sum() {
-  echo "  MESSAGE:  Verifying sha256sum of $1..."
+  echo "  MESSAGE:  Verifying sha256sum of $PACKAGE_NAME..."
   echo ""
 
   if sha256sum --check $1 --ignore-missing 2>/dev/null; then
@@ -207,7 +207,7 @@ verify_sha256sum() {
     return 0
   else
     echo ""
-    echo "  MESSAGE:  sha256sum check failed for $1"
+    echo "  MESSAGE:  sha256sum check failed for $PACKAGE_NAME"
     echo ""
     return 1
   fi
@@ -273,12 +273,11 @@ ckcc_firmware() {
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                                             "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
 
-    if download_files "$DOWNLOAD_STRING"; then
-      unset DOWNLOAD_STRING
-    else
+    if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
       return 1
     fi
+    unset DOWNLOAD_STRING
 
   fi
 
@@ -317,8 +316,7 @@ ckcc_protocol() {
     local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
 
     if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
-      echo "  MESSAGE:  ckcc-protocol is already up to date"
-      echo "  MESSAGE:  with version $LATEST_VERSION!"
+      echo "  MESSAGE:  ckcc-protocol is already up to date with version $LATEST_VERSION"
       return 0
     fi
 
@@ -327,12 +325,11 @@ ckcc_protocol() {
 
     if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
 
-      if download_files "$DOWNLOAD_STRING"; then
-        unset DOWNLOAD_STRING
-      else
+      if ! download_files "$DOWNLOAD_STRING"; then
         unset DOWNLOAD_STRING
         return 1
       fi
+      unset DOWNLOAD_STRING
 
     fi
 
@@ -382,12 +379,11 @@ wasabi_wallet() {
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                                             "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
 
-    if download_files "$DOWNLOAD_STRING"; then
-      unset DOWNLOAD_STRING
-    else
+    if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
       return 1
     fi
+    unset DOWNLOAD_STRING
 
   fi
 
@@ -411,6 +407,7 @@ wasabi_wallet() {
   else
     echo ""
     echo "  MESSAGE:  Something went wrong when installing $PACKAGE_NAME"
+    echo ""
     return 1
   fi
 
