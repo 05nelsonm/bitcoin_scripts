@@ -43,9 +43,11 @@ change_dir() {
 }
 
 # Format when sending to this method:
-# check_for_existing_package $PACKAGE_NAME $DOWNLOAD_URL $PACKAGE_2_NAME $DOWNLOAD_2_URL ...
-check_for_existing_package() {
-  echo "Checking for existing package(s)..."
+# check_for_already_downloaded_package $PACKAGE_NAME $DOWNLOAD_URL \
+#                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
+#                                      ...
+check_for_already_downloaded_package() {
+  echo "Checking if package(s) have already been downloaded..."
   echo ""
 
   local ARGUMENTS=( "$@" )
@@ -177,8 +179,8 @@ init() {
 ckcc_firmware() {
   set_download_dir ~/Coldcard-firmware
   change_dir "$DOWNLOAD_DIR"
-  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
+  check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                                       "$SIGNATURE_NAME" "$SIGNATURE_URL"
 
   if ! check_pgp_keys; then
     import_pgp_keys_from_url "$PGP_IMPORT_URL"
@@ -200,8 +202,8 @@ wasabi_wallet() {
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
 
-  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
+  check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                                       "$SIGNATURE_NAME" "$SIGNATURE_URL"
 
   if ! check_pgp_keys; then
     import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
