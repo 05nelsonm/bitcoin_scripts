@@ -101,7 +101,7 @@ check_pgp_keys() {
 }
 
 # When using this method:
-# import_pgp_keys_from_file $PGP_FILE $PGP_FILE_DOWNLOAD_URL
+# import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
 import_pgp_keys_from_file() {
   echo "Importing PGP key from file..."
   echo ""
@@ -175,7 +175,7 @@ verify_sha256sum() {
 
 clean_up() {
   rm -rf $@
-  echo "$DOWNLOAD_DIR has been cleaned up"
+  echo "Directories have been cleaned up"
 }
 
 init() {

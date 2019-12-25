@@ -1,7 +1,7 @@
 #!/bin/bash
 
 exit_script() {
-  echo "An update from $CURRENT_VERSION to $LATEST_VERSION is available"
+  echo "An update to $LATEST_VERSION is available"
   echo "Please exit $1 at your earliest convience and re-run this script"
   exit 1
 }
