@@ -3,8 +3,9 @@
 SCRIPT_OPTIONS=($2 $3 $4 $5 $6)
 
 source_file() {
-  if [ -f $1 ]; then
-    source $1 $2
+  local FILE=$1
+  if [ -f $FILE ]; then
+    source $FILE $2 $3 $4
   else
     echo "Unable to find file $1"
     exit 1
@@ -194,7 +195,7 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
-  source_file "$WORKING_DIR/scripts/check_versions.sh"
+  source_file "$WORKING_DIR/scripts/check_versions.sh" $CURRENT_VERSION $LATEST_VERSION
   source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
