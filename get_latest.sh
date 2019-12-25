@@ -305,9 +305,28 @@ ckcc_protocol() {
 
     if tar -xzf $PACKAGE_NAME; then
       cd Coldcard-ckcc-protocol-*
+
+      if pip install -r requirements.txt; then
+
+        if sudo python3 setup.py install; then
+          echo ""
+          echo "ckcc-protocol-$LATEST_VERSION has been installed successfully!"
+          echo ""
+          change_dir "$DOWNLOAD_DIR"
+        fi
+
+      else
+        echo "Needed python dist packages were not installed. Stopping..."
+        return 1
+      fi
+
+    else
+      echo "Couldn't extract $PACKAGE_NAME. Stopping..."
+      return 1
     fi
 
   else
+    echo "Python3 version is less than the minimum required (3.6)."
     return 1
   fi
 
