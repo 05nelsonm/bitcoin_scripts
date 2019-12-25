@@ -66,13 +66,8 @@ check_for_existing_package() {
   if [ $COUNTER -eq 0 ]; then
     echo "Packages are already downloaded. Re-verifying them!"
     echo ""
-    return 0
   else
-
-    if download_files "$DOWNLOAD_STRING"; then
-      return 0
-    fi
-
+    download_files "$DOWNLOAD_STRING"
   fi
 }
 
@@ -80,28 +75,46 @@ download_files() {
   echo "Downloading packages to $DOWNLOAD_DIR"
   echo ""
 
-  if $WGET_TOR_FLAG wget $@; then
-    echo ""
-    return 0
-  else
+  if ! $WGET_TOR_FLAG wget $@; then
     echo "Something went wrong with the download."
 
     if [ $WGET_TOR_FLAG != "" ]; then
-      echo "Try executing `sudo service tor restart` and re-running the script"
+      echo "Try executing 'sudo service tor restart' and re-running the script"
     fi
 
-    echo ""
     exit 1
   fi
+
+  echo ""
 }
 
 check_pgp_keys() {
   if OUT=$(gpg --list-keys 2>/dev/null) &&
            echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
+    unset OUT
     return 0
   else
-    IMPORT_PGP_NEEDED="yes"
+    unset OUT
     return 1
+  fi
+}
+
+import_pgp_keys_from_file() {
+  if [ -f $1 ]; then
+    mv "$1" "$1.previous"
+    echo "$1 already existed and was renamed to $1.previous"
+    echo ""
+  fi
+
+  download_files "$2"
+  if gpg --import "$1" 2>/dev/null; then
+    rm -rf "$1"
+    echo "PGP keys have been successfully imported"
+    echo ""
+  else
+    echo "Failed to import PGP keys to verify package signatures"
+    echo "Check your gpg package settings and re-run the script"
+    exit 1
   fi
 }
 
@@ -111,22 +124,14 @@ wasabi() {
   set_download_dir ~/Downloads
   change_dir "$DOWNLOAD_DIR"
 
+  check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
+                             "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL"
+
   if ! check_pgp_keys; then
-        local PGP_FILE_NAME_TEMP="$PGP_FILE_NAME"
-        local PGP_FILE_URL_TEMP="$PGP_FILE_URL"
+    import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"
   fi
 
-  if check_for_existing_package "$LATEST_PACKAGE_NAME" "$PACKAGE_DOWNLOAD_URL" \
-                                "$LATEST_PACKAGE_NAME.asc" "$SIGNATURE_DOWNLOAD_URL" \
-                                "$PGP_FILE_NAME_TEMP" "$PGP_FILE_URL_TEMP"; then
-
-    if [ "$IMPORT_PGP_NEEDED" = "yes" ]; then
-#      import_pgp_keys_from_file "$PGP_FILE_NAME"
-      unset IMPORT_PGP_NEEDED
-    fi
-
-    echo "verify signatures next"
-  fi
+  echo "verify signatures next"
 }
 
 help() {
