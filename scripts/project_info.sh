@@ -38,7 +38,7 @@ case $1 in
     local LATEST_RELEASE_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/tags"
 
     #CURRENT_VERSION=
-    LATEST_VERSION=$(curl -s $CURL_TOR_FLAG $REPO_TAGS_URL | jq '.[6]' | jq -r '.name')
+    LATEST_VERSION=$(curl -s $CURL_TOR_FLAG $LATEST_RELEASE_URL | jq '.[6]' | jq -r '.name')
 
     PACKAGE_NAME="$LATEST_VERSION-coldcard.dfu"
     PACKAGE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/raw/master/releases/$PACKAGE_NAME"
