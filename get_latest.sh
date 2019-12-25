@@ -231,7 +231,7 @@ clean_up() {
     if ! [ -z "${ARGUMENTS[$i]}" ]; then
       if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
         $SUDO rm -rf "${ARGUMENTS[$i]}"
-        echo "DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+        echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
       fi
     fi
   done
