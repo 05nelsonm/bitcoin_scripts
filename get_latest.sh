@@ -158,6 +158,14 @@ wasabi() {
   fi
 }
 
+ckcc_firmware() {
+  set_download_dir ~/Coldcard-firmware
+  change_dir "$DOWNLOAD_DIR"
+  check_for_existing_package "$PACKAGE_NAME" "$PACKAGE_URL" \
+                             "$SIGNATURE_NAME" "$SIGNATURE_URL"
+
+}
+
 help() {
   echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
   echo ""
@@ -193,6 +201,7 @@ case $1 in
     ;;
   "ckcc-firmware")
     init $1
+    ckcc_firmware $1
     ;;
   *)
     help
