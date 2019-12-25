@@ -1,6 +1,7 @@
 #!/bin/bash
 
-SCRIPT_OPTIONS=($2 $3 $4 $5 $6)
+SCRIPT_PACKAGE=$1; shift
+SCRIPT_OPTIONS=( $@ )
 
 source_file() {
   local FILE=$1
@@ -264,18 +265,18 @@ help() {
   exit 0
 }
 
-case $1 in
+case $SCRIPT_PACKAGE in
   "ckcc-firmware")
-    init $1
-    ckcc_firmware $1
+    init $SCRIPT_PACKAGE
+    ckcc_firmware $SCRIPT_PACKAGE
     ;;
   "ckcc-protocol")
-    init $1
-    ckcc_protocol $1
+    init $SCRIPT_PACKAGE
+    ckcc_protocol $SCRIPT_PACKAGE
     ;;
   "wasabi-wallet")
-    init $1
-    wasabi_wallet $1
+    init $SCRIPT_PACKAGE
+    wasabi_wallet $SCRIPT_PACKAGE
     ;;
   *)
     help
