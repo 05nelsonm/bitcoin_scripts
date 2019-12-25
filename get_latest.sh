@@ -108,11 +108,7 @@ download_files() {
   fi
 }
 
-# $PGP_KEY_FINGERPRINT must be set by scripts/project_info.sh
-# to mitigate potential modification of PGP key fingerprints
-# that could occur when passing the variable back and forth as
-# an argument.
-check_pgp_keys() {
+check_for_pgp_key() {
   echo "  MESSAGE:  Checking for PGP key..."
   echo ""
 
@@ -281,7 +277,7 @@ ckcc_firmware() {
 
   fi
 
-  if ! check_pgp_keys; then
+  if ! check_for_pgp_key; then
 
     if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
       return 1
@@ -387,7 +383,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! check_pgp_keys; then
+  if ! check_for_pgp_key; then
 
     if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
       return 1
