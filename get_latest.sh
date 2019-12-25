@@ -188,6 +188,11 @@ ckcc_firmware() {
   clean_up "$SIGNATURE_NAME"
 }
 
+ckcc_protocol() {
+  set_download_dir ~/Downloads
+  change_dir "$DOWNLOAD_DIR"
+}
+
 wasabi_wallet() {
   source_file "$WORKING_DIR/scripts/check_versions.sh"
   source_file "$WORKING_DIR/scripts/check_if_running.sh" $1
@@ -217,13 +222,18 @@ help() {
   echo "    ./get_latest.sh [PACKAGE-NAME] [OPTIONS]..."
   echo ""
   echo "[PACKAGE-NAME]:"
+  echo ""
   echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
-  echo "                           of Wasabi Wallet"
+  echo "                           of Wasabi Wallet."
   echo ""
   echo "    ckcc-firmware .  .  .  Downloads and verifies the latest"
-  echo "                           Coldcard firmware"
+  echo "                           Coldcard firmware."
+  echo ""
+  echo "    ckcc-protocol .  .  .  Installs the latest Coldcard protocol"
+  echo "                           (primarily needed for Electrum Wallet)."
   echo ""
   echo "[OPTIONS]:"
+  echo ""
   echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
   echo "                           connectivity check will be done."
   echo ""
@@ -245,6 +255,10 @@ case $1 in
   "ckcc-firmware")
     init $1
     ckcc_firmware $1
+    ;;
+  "ckcc-protocol")
+    init $1
+    ckcc_protocol $1
     ;;
   "wasabi-wallet")
     init $1
