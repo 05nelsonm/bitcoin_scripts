@@ -323,7 +323,7 @@ ckcc_protocol() {
     local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
 
     if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
-      echo "  MESSAGE:  ckcc-protocol is already up to date with version $LATEST_VERSION"
+      echo "  MESSAGE:  Already up to date with version $LATEST_VERSION"
       return 0
     fi
 
@@ -411,7 +411,13 @@ wasabi_wallet() {
 
   if sudo dpkg $DRY_RUN -i $PACKAGE_NAME; then
     echo ""
-    echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
+
+    if [ "$DRY_RUN" = "--dry-run" ];then
+      echo "  MESSAGE:  $PACKAGE_NAME was not installed because --dry-run is set"
+    else
+      echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
+    fi
+
     clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
   else
     echo ""
@@ -460,7 +466,7 @@ help() {
   echo "                          +  Setting this option will skip the check"
   echo "                          +  and make downloads over clearnet."
   echo ""
-  echo "    --only-tor    .  .  . +  Will only use tor to download packages."
+  echo "    --only-tor    .  .  . +  Will only use Tor to download packages."
   echo "                          +  If the connectivity check fails, the"
   echo "                          +  script exits."
   echo ""
