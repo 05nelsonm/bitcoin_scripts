@@ -1,8 +1,17 @@
 #!/bin/bash
 
-if  command -v tor 1>/dev/null; then
+if command -v tor 1>/dev/null; then
   echo "  MESSAGE:  Checking for Tor connectivity..."
   echo ""
+
+  if ! command -v curl 1>/dev/null; then
+
+    if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" "no-specified-package" "curl"; then
+      echo "Curl needs to be installed to go any further... Stopping the script."
+      exit 1
+    fi
+
+  fi
 
   if OUT=$(curl --socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT \
            https://check.torproject.org/ | cat | grep -m 1 "Congratulations" \
