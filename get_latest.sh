@@ -248,8 +248,12 @@ init() {
       return 1
     fi
 
-    if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
-      return 1
+    if [ "$NO_TOR" != "--no-tor" ]; then
+
+      if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
+        return 1
+      fi
+
     fi
 
   let INIT_COUNTER++
@@ -441,6 +445,9 @@ help() {
   echo "                          +  packages & updates/installs them."
   echo ""
   echo "    ckcc-firmware .  .  . +  Downloads the latest Coldcard firmware."
+  echo "                          +"
+  echo "                          +  Running this will *ALWAYS* re-verify the"
+  echo "                          +  package for you if it already exists."
   echo ""
   echo "    ckcc-protocol .  .  . +  Installs the latest Coldcard protocol"
   echo "                          +  (primarily needed for Electrum Wallet)."
@@ -475,6 +482,14 @@ help() {
 
 if contains $SCRIPT_OPTIONS "--dry-run"; then
   DRY_RUN="--dry-run"
+fi
+
+if contains $SCRIPT_OPTIONS "--no-tor"; then
+  NO_TOR="--no-tor"
+fi
+
+if contains $SCRIPT_OPTIONS "--only-tor"; then
+  ONLY_TOR="--only-tor"
 fi
 
 case $SCRIPT_PACKAGE in
