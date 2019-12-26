@@ -2,15 +2,18 @@
 
 SCRIPT_PACKAGE=$1; shift
 SCRIPT_OPTIONS=( $@ )
-SET_TOR_COUNTER=0
+INIT_COUNTER=0
 
-display_message_for_getting_package() {
+display_title_message() {
   echo ""
   echo "============================================================================"
   echo ""
   echo "                       Getting $1 for you!"
   echo ""
   echo "============================================================================"
+  echo ""
+  echo "                  Press 'ctrl + c' to stop at any time"
+  echo ""
 }
 
 # When using this method:
@@ -35,7 +38,7 @@ source_file() {
 
 contains() {
   for VALUE in $1; do
-    if [ $VALUE = $2 ]; then
+    if [ "$VALUE" = "$2" ]; then
       unset VALUE
       return 0
     fi
@@ -108,11 +111,7 @@ download_files() {
   fi
 }
 
-# $PGP_KEY_FINGERPRINT must be set by scripts/project_info.sh
-# to mitigate potential modification of PGP key fingerprints
-# that could occur when passing the variable back and forth as
-# an argument.
-check_pgp_keys() {
+check_for_pgp_key() {
   echo "  MESSAGE:  Checking for PGP key..."
   echo ""
 
@@ -196,7 +195,7 @@ verify_pgp_signature() {
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
 verify_sha256sum() {
-  echo "  MESSAGE:  Verifying sha256sum of $1..."
+  echo "  MESSAGE:  Verifying sha256sum of $PACKAGE_NAME..."
   echo ""
 
   if sha256sum --check $1 --ignore-missing 2>/dev/null; then
@@ -207,7 +206,7 @@ verify_sha256sum() {
     return 0
   else
     echo ""
-    echo "  MESSAGE:  sha256sum check failed for $1"
+    echo "  MESSAGE:  sha256sum check failed for $PACKAGE_NAME"
     echo ""
     return 1
   fi
@@ -219,34 +218,50 @@ verify_sha256sum() {
 # Can also send `--sudo` as the first argument to
 # make this method call `sudo rm -rf ...`
 clean_up() {
-  if [ $1 = --sudo ]; then
-    local SUDO="sudo"
-    shift
-  fi
+  if [ "$DRY_RUN" != "--dry-run" ]; then
 
-  local ARGUMENTS=( $@ )
-  local CLEAN_UP_DIR=$(pwd)
-
-  for ((i=0; i < $#; i++)); do
-    if ! [ -z "${ARGUMENTS[$i]}" ]; then
-      if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
-        $SUDO rm -rf "${ARGUMENTS[$i]}"
-        echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
-      fi
+    if [ $1 = --sudo ]; then
+      local SUDO="sudo"
+      shift
     fi
-  done
+
+    local ARGUMENTS=( $@ )
+    local CLEAN_UP_DIR=$(pwd)
+
+    for ((i=0; i < $#; i++)); do
+      if ! [ -z "${ARGUMENTS[$i]}" ]; then
+        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
+          $SUDO rm -rf "${ARGUMENTS[$i]}"
+          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+        fi
+      fi
+    done
+
+  fi
 }
 
 init() {
-  display_message_for_getting_package $1
-  WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+  display_title_message $1
 
-  if ! source_file "$WORKING_DIR/.env"; then
-    return 1
-  fi
+  if [ $INIT_COUNTER -eq 0 ]; then
 
-  if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
-    return 1
+    WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+
+    if ! source_file "$WORKING_DIR/.env"; then
+      return 1
+    fi
+
+    if [ "$NO_TOR" != "--no-tor" ]; then
+
+      if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
+        return 1
+      fi
+
+    fi
+
+  let INIT_COUNTER++
+  else
+  cd $WORKING_DIR
   fi
 
   if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
@@ -267,16 +282,15 @@ ckcc_firmware() {
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                                             "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
 
-    if download_files "$DOWNLOAD_STRING"; then
-      unset DOWNLOAD_STRING
-    else
+    if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
       return 1
     fi
+    unset DOWNLOAD_STRING
 
   fi
 
-  if ! check_pgp_keys; then
+  if ! check_for_pgp_key; then
 
     if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
       return 1
@@ -295,7 +309,6 @@ ckcc_firmware() {
     echo "  MESSAGE:  $DOWNLOAD_DIR after you have"
     echo "  MESSAGE:  updated your device so this script can tell what"
     echo "  MESSAGE:  version you have installed!"
-    echo ""
   else
     clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
     return 1
@@ -307,54 +320,57 @@ ckcc_firmware() {
 ckcc_protocol() {
   local PYTHON_3_VERSION=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f 2)
 
-  if [ $PYTHON_3_VERSION -gt 5 ]; then
+  if [ $PYTHON_3_VERSION -lt 6 ]; then
+    echo "  MESSAGE:  Python3 version is less than the minimum required (3.6)."
+    return 1
+  fi
+
+  if [ "$DRY_RUN" != "--dry-run" ]; then
+
     local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
 
     if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
-      echo "  MESSAGE:  ckcc-protocol is already up to date"
-      echo "  MESSAGE:  with version $LATEST_VERSION!"
+      echo "  MESSAGE:  Already up to date with version $LATEST_VERSION"
       return 0
     fi
 
-    set_download_dir ~/Downloads/ckcc-protocol
-    change_dir "$DOWNLOAD_DIR"
+  fi
 
-    if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
+  set_download_dir ~/Downloads/ckcc-protocol
+  change_dir "$DOWNLOAD_DIR"
 
-      if download_files "$DOWNLOAD_STRING"; then
-        unset DOWNLOAD_STRING
-      else
-        unset DOWNLOAD_STRING
-        return 1
-      fi
+  if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
 
-    fi
-
-    if tar -xzf $PACKAGE_NAME; then
-      cd Coldcard-ckcc-protocol-*
-
-      if pip install -r requirements.txt; then
-
-        if sudo python3 setup.py install; then
-          echo ""
-          echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
-          echo ""
-          change_dir "$DOWNLOAD_DIR"
-          clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
-        fi
-
-      else
-        echo "  MESSAGE:  Needed python dist packages were not installed. Stopping..."
-        return 1
-      fi
-
-    else
-      echo "  MESSAGE:  Couldn't extract $PACKAGE_NAME. Stopping..."
+    if ! download_files "$DOWNLOAD_STRING"; then
+      unset DOWNLOAD_STRING
       return 1
     fi
+    unset DOWNLOAD_STRING
 
+  fi
+
+  if ! tar -xzf $PACKAGE_NAME; then
+    echo "  MESSAGE:  Couldn't extract $PACKAGE_NAME. Stopping..."
+    return 1
+  fi
+
+  cd Coldcard-ckcc-protocol-*
+
+  if [ "$DRY_RUN" = "--dry-run" ]; then
+    echo "  MESSAGE:  '--dry-run' flag set, stopping before installing anything..."
+    return 1
+  fi
+
+  pip install -r requirements.txt
+
+  if sudo python3 setup.py install; then
+    echo ""
+    echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
+    change_dir "$DOWNLOAD_DIR"
+    clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
   else
-    echo "  MESSAGE:  Python3 version is less than the minimum required (3.6)."
+    echo ""
+    echo "  MESSAGE:  Installation FAILED."
     return 1
   fi
 
@@ -362,12 +378,16 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
-  if ! source_file "$WORKING_DIR/scripts/is_new_version_available.sh" $CURRENT_VERSION $LATEST_VERSION; then
-    return 1
-  fi
+  if [ "$DRY_RUN" != "--dry-run" ]; then
 
-  if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
-    return 1
+    if ! source_file "$WORKING_DIR/scripts/is_new_version_available.sh" $CURRENT_VERSION $LATEST_VERSION; then
+      return 1
+    fi
+
+    if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
+      return 1
+    fi
+
   fi
 
   set_download_dir ~/Downloads/wasabi-wallet
@@ -376,16 +396,15 @@ wasabi_wallet() {
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                                             "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
 
-    if download_files "$DOWNLOAD_STRING"; then
-      unset DOWNLOAD_STRING
-    else
+    if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
       return 1
     fi
+    unset DOWNLOAD_STRING
 
   fi
 
-  if ! check_pgp_keys; then
+  if ! check_for_pgp_key; then
 
     if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
       return 1
@@ -397,10 +416,15 @@ wasabi_wallet() {
     return 1
   fi
 
-  if sudo dpkg -i $PACKAGE_NAME; then
+  if sudo dpkg $DRY_RUN -i $PACKAGE_NAME; then
     echo ""
-    echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
-    echo ""
+
+    if [ "$DRY_RUN" = "--dry-run" ];then
+      echo "  MESSAGE:  $PACKAGE_NAME was not installed because --dry-run is set"
+    else
+      echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
+    fi
+
     clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
   else
     echo ""
@@ -413,75 +437,95 @@ wasabi_wallet() {
 
 help() {
   echo ""
+  echo "This script downloads, verifies signatures of, & installs packages for you."
+  echo ""
+  echo ""
   echo "$ ./get_latest.sh [PACKAGE-NAME] [OPTION1] [OPTION2] ..."
   echo ""
-  echo "[PACKAGE-NAME]:"
+  echo "[PACKAGE-NAME]"
   echo ""
-  echo "    get-all .  .  .  .  .  Cycles through all of the below listed"
-  echo "                           packages & updates/installs them."
+  echo "    get-all .  .  .  .  . +  Cycles through all of the below listed"
+  echo "                          +  packages & updates/installs them."
   echo ""
-  echo "    ckcc-firmware .  .  .  Downloads and verifies the latest"
-  echo "                           Coldcard firmware."
+  echo "    ckcc-firmware .  .  . +  Downloads the latest Coldcard firmware."
+  echo "                          +"
+  echo "                          +  Running this will *ALWAYS* re-verify the"
+  echo "                          +  package for you if it already exists."
   echo ""
-  echo "    ckcc-protocol .  .  .  Installs the latest Coldcard protocol"
-  echo "                           (primarily needed for Electrum Wallet)."
+  echo "    ckcc-protocol .  .  . +  Installs the latest Coldcard protocol"
+  echo "                          +  (primarily needed for Electrum Wallet)."
   echo ""
-  echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
-  echo "                           of Wasabi Wallet."
+  echo "    wasabi-wallet .  .  . +  Installs the latest .deb package"
+  echo "                          +  of Wasabi Wallet."
   echo ""
-  echo "[OPTIONS]:"
+  echo "[OPTIONS]"
   echo ""
-  echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
-  echo "                           connectivity check will be done."
+  echo "    --dry-run  .  .  .  . +  Will not install or delete downloaded"
+  echo "                          +  packages."
+  echo "                          +"
+  echo "                          +  Can also be used just to download and"
+  echo "                          +  verify the latest package(s)."
   echo ""
-  echo "                           If it passes, the script will download"
-  echo "                           over Tor. If it fails, it falls back"
-  echo "                           to downloading over clearnet."
+  echo "    --no-tor   .  .  .  . +  By default, if Tor is installed a"
+  echo "                          +  connectivity check will be performed."
+  echo "                          +"
+  echo "                          +  If it passes, the script will download"
+  echo "                          +  things over Tor; if it fails, it falls"
+  echo "                          +  back to downloading things over clearnet."
+  echo "                          +"
+  echo "                          +  Setting this option will skip the check"
+  echo "                          +  entirely & download things over clearnet."
   echo ""
-  echo "                           Setting this option will skip the check"
-  echo "                           and make downloads over clearnet."
-  echo ""
-  echo "    --only-tor    .  .  .  Will only use tor to download packages."
-  echo "                           If the connectivity check fails, the"
-  echo "                           script exits."
+  echo "    --only-tor    .  .  . +  Will *ONLY* use Tor to download packages."
+  echo "                          +  If the connectivity check fails, the"
+  echo "                          +  script exits."
   echo ""
   echo ""
 }
+
+if contains $SCRIPT_OPTIONS "--dry-run"; then
+  DRY_RUN="--dry-run"
+fi
+
+if contains $SCRIPT_OPTIONS "--no-tor"; then
+  NO_TOR="--no-tor"
+fi
+
+if contains $SCRIPT_OPTIONS "--only-tor"; then
+  ONLY_TOR="--only-tor"
+fi
 
 case $SCRIPT_PACKAGE in
   "get-all")
     if init "ckcc-firmware"; then
       ckcc_firmware "ckcc-firmware"
     fi
-    echo ""
-    cd $WORKING_DIR
 
     if init "ckcc-protocol"; then
       ckcc_protocol "ckcc-protocol"
     fi
-    echo ""
-    cd $WORKING_DIR
 
     if init "wasabi-wallet"; then
       wasabi_wallet "wasabi-wallet"
     fi
-    echo ""
-    cd $WORKING_DIR
     ;;
   "ckcc-firmware")
     if init $SCRIPT_PACKAGE; then
       ckcc_firmware $SCRIPT_PACKAGE
     fi
+    echo ""
     ;;
   "ckcc-protocol")
     if init $SCRIPT_PACKAGE; then
       ckcc_protocol $SCRIPT_PACKAGE
     fi
+    echo ""
     ;;
   "wasabi-wallet")
     if init $SCRIPT_PACKAGE; then
       wasabi_wallet $SCRIPT_PACKAGE
     fi
+    echo ""
     ;;
   *)
     help

@@ -8,6 +8,6 @@ if [ "$CURRENT" != "$NEWEST" ]; then
   echo ""
   return 0
 else
-  echo "  MESSAGE:  Newest version $NEWEST is already installed"
+  echo "  MESSAGE:  Already up to date with version $NEWEST"
   return 1
 fi
