@@ -4,10 +4,10 @@ Scripts that make setting up & maintaining a Bitcoin full node easier.
 
 This script will: 
 
+- Install needed dependencies to run the package(s) & this script.
 - Check for the latest version of specified package(s). If an update  
   is available, it will:  
-
-  - Install needed dependencies to run the package(s) & this script.  
+ 
   - Download the package(s).  
   - Verify PGP/sha256sum signatures of the package(s), when applicable.  
   - Install the package(s), when applicable.
