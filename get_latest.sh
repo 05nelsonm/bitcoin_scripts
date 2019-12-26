@@ -35,7 +35,7 @@ source_file() {
 
 contains() {
   for VALUE in $1; do
-    if [ $VALUE = $2 ]; then
+    if [ "$VALUE" = "$2" ]; then
       unset VALUE
       return 0
     fi
@@ -249,6 +249,8 @@ init() {
     fi
 
   let INIT_COUNTER++
+  else
+  cd $WORKING_DIR
   fi
 
   if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
@@ -296,7 +298,6 @@ ckcc_firmware() {
     echo "  MESSAGE:  $DOWNLOAD_DIR after you have"
     echo "  MESSAGE:  updated your device so this script can tell what"
     echo "  MESSAGE:  version you have installed!"
-    echo ""
   else
     clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
     return 1
@@ -308,17 +309,20 @@ ckcc_firmware() {
 ckcc_protocol() {
   local PYTHON_3_VERSION=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f 2)
 
-  if [ $PYTHON_3_VERSION -gt 5 ]; then
-    local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
-  else
+  if [ $PYTHON_3_VERSION -lt 6 ]; then
     echo "  MESSAGE:  Python3 version is less than the minimum required (3.6)."
     return 1
   fi
 
-  if [[ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" \
-      || "$DRY_RUN" != "--dry-run" ]]; then
-    echo "  MESSAGE:  ckcc-protocol is already up to date with version $LATEST_VERSION"
-    return 0
+  if [ "$DRY_RUN" != "--dry-run" ]; then
+
+    local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
+
+    if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
+      echo "  MESSAGE:  ckcc-protocol is already up to date with version $LATEST_VERSION"
+      return 0
+    fi
+
   fi
 
   set_download_dir ~/Downloads/ckcc-protocol
@@ -341,23 +345,21 @@ ckcc_protocol() {
 
   cd Coldcard-ckcc-protocol-*
 
-  if contains $SCRIPT_OPTIONS "--dry-run"; then
-    echo "--dry-run flag set, stopping before installing anything..."
+  if [ "$DRY_RUN" = "--dry-run" ]; then
+    echo "  MESSAGE:  '--dry-run' flag set, stopping before installing anything..."
     return 1
   fi
 
-  pip install -r requirements.txt; then
+  pip install -r requirements.txt
 
   if sudo python3 setup.py install; then
     echo ""
     echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
-    echo ""
     change_dir "$DOWNLOAD_DIR"
     clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
   else
     echo ""
     echo "  MESSAGE:  Installation FAILED."
-    echo ""
     return 1
   fi
 
@@ -406,12 +408,10 @@ wasabi_wallet() {
   if sudo dpkg $DRY_RUN -i $PACKAGE_NAME; then
     echo ""
     echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
-    echo ""
     clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
   else
     echo ""
     echo "  MESSAGE:  Something went wrong when installing $PACKAGE_NAME"
-    echo ""
     return 1
   fi
 
@@ -466,35 +466,32 @@ case $SCRIPT_PACKAGE in
     if init "ckcc-firmware"; then
       ckcc_firmware "ckcc-firmware"
     fi
-    echo ""
-    cd $WORKING_DIR
 
     if init "ckcc-protocol"; then
       ckcc_protocol "ckcc-protocol"
     fi
-    echo ""
-    cd $WORKING_DIR
 
     if init "wasabi-wallet"; then
       wasabi_wallet "wasabi-wallet"
     fi
-    echo ""
-    cd $WORKING_DIR
     ;;
   "ckcc-firmware")
     if init $SCRIPT_PACKAGE; then
       ckcc_firmware $SCRIPT_PACKAGE
     fi
+    echo ""
     ;;
   "ckcc-protocol")
     if init $SCRIPT_PACKAGE; then
       ckcc_protocol $SCRIPT_PACKAGE
     fi
+    echo ""
     ;;
   "wasabi-wallet")
     if init $SCRIPT_PACKAGE; then
       wasabi_wallet $SCRIPT_PACKAGE
     fi
+    echo ""
     ;;
   *)
     help
