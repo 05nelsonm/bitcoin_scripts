@@ -215,22 +215,26 @@ verify_sha256sum() {
 # Can also send `--sudo` as the first argument to
 # make this method call `sudo rm -rf ...`
 clean_up() {
-  if [ $1 = --sudo ]; then
-    local SUDO="sudo"
-    shift
-  fi
+  if [ "$DRY_RUN" != "--dry-run" ]; then
 
-  local ARGUMENTS=( $@ )
-  local CLEAN_UP_DIR=$(pwd)
-
-  for ((i=0; i < $#; i++)); do
-    if ! [ -z "${ARGUMENTS[$i]}" ]; then
-      if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
-        $SUDO rm -rf "${ARGUMENTS[$i]}"
-        echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
-      fi
+    if [ $1 = --sudo ]; then
+      local SUDO="sudo"
+      shift
     fi
-  done
+
+    local ARGUMENTS=( $@ )
+    local CLEAN_UP_DIR=$(pwd)
+
+    for ((i=0; i < $#; i++)); do
+      if ! [ -z "${ARGUMENTS[$i]}" ]; then
+        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
+          $SUDO rm -rf "${ARGUMENTS[$i]}"
+          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+        fi
+      fi
+    done
+
+  fi
 }
 
 init() {
@@ -420,39 +424,45 @@ wasabi_wallet() {
 
 help() {
   echo ""
+  echo "This script downloads, verifies signatures of, & installs packages for you."
+  echo ""
+  echo ""
   echo "$ ./get_latest.sh [PACKAGE-NAME] [OPTION1] [OPTION2] ..."
   echo ""
-  echo "[PACKAGE-NAME]:"
+  echo "[PACKAGE-NAME]"
   echo ""
-  echo "    get-all .  .  .  .  .  Cycles through all of the below listed"
-  echo "                           packages & updates/installs them."
+  echo "    get-all .  .  .  .  . +  Cycles through all of the below listed"
+  echo "                          +  packages & updates/installs them."
   echo ""
-  echo "    ckcc-firmware .  .  .  Downloads and verifies the latest"
-  echo "                           Coldcard firmware."
+  echo "    ckcc-firmware .  .  . +  Downloads the latest Coldcard firmware."
   echo ""
-  echo "    ckcc-protocol .  .  .  Installs the latest Coldcard protocol"
-  echo "                           (primarily needed for Electrum Wallet)."
+  echo "    ckcc-protocol .  .  . +  Installs the latest Coldcard protocol"
+  echo "                          +  (primarily needed for Electrum Wallet)."
   echo ""
-  echo "    wasabi-wallet .  .  .  Installs the latest .deb package"
-  echo "                           of Wasabi Wallet."
+  echo "    wasabi-wallet .  .  . +  Installs the latest .deb package"
+  echo "                          +  of Wasabi Wallet."
   echo ""
-  echo "[OPTIONS]:"
+  echo "[OPTIONS]"
   echo ""
-  echo "    --dry-run  .  .  .  .  Will not install the packages."
+  echo "    --dry-run  .  .  .  . +  Will not install or delete downloaded"
+  echo "                          +  packages."
+  echo "                          +"
+  echo "                          +  Can also be used just to download and"
+  echo "                          +  verify packages."
   echo ""
-  echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
-  echo "                           connectivity check will be done."
+  echo "    --no-tor   .  .  .  . +  By default, if Tor is found a"
+  echo "                          +  connectivity check will be done."
+  echo "                          +"
+  echo "                          +  If it passes, the script will download"
+  echo "                          +  over Tor. If it fails, it falls back"
+  echo "                          +  to downloading over clearnet."
+  echo "                          +"
+  echo "                          +  Setting this option will skip the check"
+  echo "                          +  and make downloads over clearnet."
   echo ""
-  echo "                           If it passes, the script will download"
-  echo "                           over Tor. If it fails, it falls back"
-  echo "                           to downloading over clearnet."
-  echo ""
-  echo "                           Setting this option will skip the check"
-  echo "                           and make downloads over clearnet."
-  echo ""
-  echo "    --only-tor    .  .  .  Will only use tor to download packages."
-  echo "                           If the connectivity check fails, the"
-  echo "                           script exits."
+  echo "    --only-tor    .  .  . +  Will only use tor to download packages."
+  echo "                          +  If the connectivity check fails, the"
+  echo "                          +  script exits."
   echo ""
   echo ""
 }
