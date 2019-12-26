@@ -1,4 +1,4 @@
-Full Node Scripts  
+Bitcoin Scripts  
 =  
 Scripts that make setting up & maintaining a Bitcoin full node easier.  
 
@@ -22,7 +22,7 @@ Urls to verify for yourself are provided as comments within the file.
 
 Here is the GitHub link to it, too:  
 
-https://github.com/05nelsonm/bitcoin-full-node-scripts/blob/master/scripts/project_info.sh  
+https://github.com/05nelsonm/bitcoin_scripts/blob/master/scripts/project_info.sh
 
 ## This Project's Roadmap
 * [x] Coldcard Firmware
@@ -33,6 +33,7 @@ https://github.com/05nelsonm/bitcoin-full-node-scripts/blob/master/scripts/proje
 * [ ] Electrum Wallet
 * [ ] Electrs
 * [ ] Lnd
+* [ ] Zap-Desktop
 
 ## Testing  
 These scripts have been tested on:  
