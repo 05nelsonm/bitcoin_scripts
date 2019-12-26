@@ -310,50 +310,54 @@ ckcc_protocol() {
 
   if [ $PYTHON_3_VERSION -gt 5 ]; then
     local DIST_PACKAGES_DIR="/usr/local/lib/python3.$PYTHON_3_VERSION/dist-packages"
-
-    if [ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" ]; then
-      echo "  MESSAGE:  ckcc-protocol is already up to date with version $LATEST_VERSION"
-      return 0
-    fi
-
-    set_download_dir ~/Downloads/ckcc-protocol
-    change_dir "$DOWNLOAD_DIR"
-
-    if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
-
-      if ! download_files "$DOWNLOAD_STRING"; then
-        unset DOWNLOAD_STRING
-        return 1
-      fi
-      unset DOWNLOAD_STRING
-
-    fi
-
-    if tar -xzf $PACKAGE_NAME; then
-      cd Coldcard-ckcc-protocol-*
-
-      if pip install -r requirements.txt; then
-
-        if sudo python3 setup.py install; then
-          echo ""
-          echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
-          echo ""
-          change_dir "$DOWNLOAD_DIR"
-          clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
-        fi
-
-      else
-        echo "  MESSAGE:  Needed python dist packages were not installed. Stopping..."
-        return 1
-      fi
-
-    else
-      echo "  MESSAGE:  Couldn't extract $PACKAGE_NAME. Stopping..."
-      return 1
-    fi
-
   else
     echo "  MESSAGE:  Python3 version is less than the minimum required (3.6)."
+    return 1
+  fi
+
+  if [[ -f "$DIST_PACKAGES_DIR/ckcc_protocol-$LATEST_VERSION-py3.$PYTHON_3_VERSION.egg" \
+      || "$DRY_RUN" != "--dry-run" ]]; then
+    echo "  MESSAGE:  ckcc-protocol is already up to date with version $LATEST_VERSION"
+    return 0
+  fi
+
+  set_download_dir ~/Downloads/ckcc-protocol
+  change_dir "$DOWNLOAD_DIR"
+
+  if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
+
+    if ! download_files "$DOWNLOAD_STRING"; then
+      unset DOWNLOAD_STRING
+      return 1
+    fi
+    unset DOWNLOAD_STRING
+
+  fi
+
+  if ! tar -xzf $PACKAGE_NAME; then
+    echo "  MESSAGE:  Couldn't extract $PACKAGE_NAME. Stopping..."
+    return 1
+  fi
+
+  cd Coldcard-ckcc-protocol-*
+
+  if contains $SCRIPT_OPTIONS "--dry-run"; then
+    echo "--dry-run flag set, stopping before installing anything..."
+    return 1
+  fi
+
+  pip install -r requirements.txt; then
+
+  if sudo python3 setup.py install; then
+    echo ""
+    echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
+    echo ""
+    change_dir "$DOWNLOAD_DIR"
+    clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
+  else
+    echo ""
+    echo "  MESSAGE:  Installation FAILED."
+    echo ""
     return 1
   fi
 
@@ -361,12 +365,16 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
-  if ! source_file "$WORKING_DIR/scripts/is_new_version_available.sh" $CURRENT_VERSION $LATEST_VERSION; then
-    return 1
-  fi
+  if [ "$DRY_RUN" != "--dry-run" ]; then
 
-  if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
-    return 1
+    if ! source_file "$WORKING_DIR/scripts/is_new_version_available.sh" $CURRENT_VERSION $LATEST_VERSION; then
+      return 1
+    fi
+
+    if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
+      return 1
+    fi
+
   fi
 
   set_download_dir ~/Downloads/wasabi-wallet
@@ -395,7 +403,7 @@ wasabi_wallet() {
     return 1
   fi
 
-  if sudo dpkg -i $PACKAGE_NAME; then
+  if sudo dpkg $DRY_RUN -i $PACKAGE_NAME; then
     echo ""
     echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
     echo ""
@@ -430,6 +438,8 @@ help() {
   echo ""
   echo "[OPTIONS]:"
   echo ""
+  echo "    --dry-run  .  .  .  .  Will not install the packages."
+  echo ""
   echo "    --no-tor   .  .  .  .  By default, if Tor is found a"
   echo "                           connectivity check will be done."
   echo ""
@@ -446,6 +456,10 @@ help() {
   echo ""
   echo ""
 }
+
+if contains $SCRIPT_OPTIONS "--dry-run"; then
+  DRY_RUN="--dry-run"
+fi
 
 case $SCRIPT_PACKAGE in
   "get-all")
