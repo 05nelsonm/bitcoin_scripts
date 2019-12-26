@@ -32,6 +32,7 @@ https://github.com/05nelsonm/bitcoin_scripts/blob/master/scripts/project_info.sh
 * [ ] Bitcoin Core
 * [ ] Electrum Wallet
 * [ ] Electrs
+* [ ] Samourai Dojo
 * [ ] Lnd
 * [ ] Zap-Desktop
 
