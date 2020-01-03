@@ -26,13 +26,7 @@ source_file() {
   fi
 }
 
-init() {
-  if ! source_file "$WORKING_DIR/scripts/functions.sh"; then
-    echo "  MESSAGE:  Could not source necessary file:"
-    echo "  MESSAGE:  $WORKING_DIR/scripts/functions.sh"
-    exit 1
-  fi
-
+set_script_option_variables() {
   if contains $SCRIPT_OPTIONS "--dry-run"; then
     DRY_RUN="--dry-run"
   fi
@@ -44,28 +38,36 @@ init() {
   if contains $SCRIPT_OPTIONS "--only-tor"; then
     ONLY_TOR="--only-tor"
   fi
+}
 
-  display_title_message $1
+init_script() {
+  if ! source_file "$WORKING_DIR/scripts/functions.sh"; then
+    echo "  MESSAGE:  Could not source necessary file:"
+    echo "  MESSAGE:  $WORKING_DIR/scripts/functions.sh"
+    echo "  MESSAGE:  even though it exists..."
+    exit 1
+  fi
 
-  if [ $INIT_COUNTER -eq 0 ]; then
+  if ! source_file "$WORKING_DIR/.env"; then
+    echo "  MESSAGE:  Could not source necessary file:"
+    echo "  MESSAGE:  $WORKING_DIR/.env"
+    echo "  MESSAGE:  even though it exists..."
+    exit 1
+  fi
 
+  set_script_option_variables
 
-    if ! source_file "$WORKING_DIR/.env"; then
+  if [ "$NO_TOR" != "--no-tor" ]; then
+
+    if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
       return 1
     fi
 
-    if [ "$NO_TOR" != "--no-tor" ]; then
-
-      if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
-        return 1
-      fi
-
-    fi
-
-  let INIT_COUNTER++
-  else
-  cd $WORKING_DIR
   fi
+}
+
+init_package() {
+  display_title_message $1
 
   if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
     return 1
@@ -286,34 +288,36 @@ help() {
   echo ""
 }
 
+init_script
+
 case $SCRIPT_PACKAGE in
   "get-all")
-    if init "ckcc-firmware"; then
+    if init_package "ckcc-firmware"; then
       ckcc_firmware "ckcc-firmware"
     fi
 
-    if init "ckcc-protocol"; then
+    if init_package "ckcc-protocol"; then
       ckcc_protocol "ckcc-protocol"
     fi
 
-    if init "wasabi-wallet"; then
+    if init_package "wasabi-wallet"; then
       wasabi_wallet "wasabi-wallet"
     fi
     ;;
   "ckcc-firmware")
-    if init $SCRIPT_PACKAGE; then
+    if init_package $SCRIPT_PACKAGE; then
       ckcc_firmware $SCRIPT_PACKAGE
     fi
     echo ""
     ;;
   "ckcc-protocol")
-    if init $SCRIPT_PACKAGE; then
+    if init_package $SCRIPT_PACKAGE; then
       ckcc_protocol $SCRIPT_PACKAGE
     fi
     echo ""
     ;;
   "wasabi-wallet")
-    if init $SCRIPT_PACKAGE; then
+    if init_package $SCRIPT_PACKAGE; then
       wasabi_wallet $SCRIPT_PACKAGE
     fi
     echo ""
