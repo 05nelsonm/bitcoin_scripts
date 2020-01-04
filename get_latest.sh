@@ -177,7 +177,7 @@ ckcc_protocol() {
 wasabi_wallet() {
   if [ "$DRY_RUN" != "--dry-run" ]; then
 
-    if ! compare_current_with_newest_versions $CURRENT_VERSION $LATEST_VERSION; then
+    if ! compare_current_with_latest_version $CURRENT_VERSION $LATEST_VERSION; then
       return 1
     fi
 

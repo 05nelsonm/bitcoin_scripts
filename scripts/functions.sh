@@ -169,16 +169,16 @@ set_tor_options() {
   fi
 }
 
-compare_current_with_newest_versions() {
+compare_current_with_latest_version() {
   local CURRENT=$1
-  local NEWEST=$2
+  local LATEST=$2
 
-  if [ "$CURRENT" != "$NEWEST" ]; then
-    echo "  MESSAGE:  An update to version $NEWEST is available!"
+  if [ "$CURRENT" != "$LATEST" ]; then
+    echo "  MESSAGE:  An update to version $LATEST is available!"
     echo ""
     return 0
   else
-    echo "  MESSAGE:  Already up to date with version $NEWEST!"
+    echo "  MESSAGE:  Already up to date with version $LATEST!"
     return 1
   fi
 }
