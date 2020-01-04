@@ -186,7 +186,7 @@ wasabi_wallet() {
       return 1
     fi
 
-    if ! source_file "$WORKING_DIR/scripts/check_if_running.sh" $1; then
+    if ! check_if_running $1; then
       return 1
     fi
 

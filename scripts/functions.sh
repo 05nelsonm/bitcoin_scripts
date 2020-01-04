@@ -152,6 +152,28 @@ compare_current_with_newest_versions() {
   fi
 }
 
+stop_install_message() {
+  echo "  MESSAGE:  An update to $LATEST_VERSION is available."
+  echo "  MESSAGE:  Please exit $1 at your earliest"
+  echo "  MESSAGE:  convience and re-run this script"
+}
+
+check_if_running() {
+  case $1 in
+    "wasabi-wallet")
+      if pgrep wassabee; then
+        stop_install_message $1
+        return 1
+      fi
+      ;;
+    *)
+      echo "$1 is not an option available for this function."
+      return 1
+  esac
+
+  return 0
+}
+
 # When using this method:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
