@@ -244,7 +244,7 @@ download_files() {
   fi
 }
 
-check_for_pgp_key() {
+check_if_pgp_key_exists_in_keyring() {
   echo "  MESSAGE:  Checking for PGP key..."
   echo ""
 
