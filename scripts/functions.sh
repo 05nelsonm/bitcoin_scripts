@@ -138,6 +138,20 @@ set_tor_options() {
   fi
 }
 
+compare_current_with_newest_versions() {
+  local CURRENT=$1
+  local NEWEST=$2
+
+  if [ "$CURRENT" != "$NEWEST" ]; then
+    echo "  MESSAGE:  An update to version $NEWEST is available!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Already up to date with version $NEWEST!"
+    return 1
+  fi
+}
+
 # When using this method:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
