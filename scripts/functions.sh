@@ -84,7 +84,7 @@ get_dependencies() {
       ;;
 
     *)
-      echo "$1 is not an option available for this function."
+      echo "  MESSAGE:  $1 is not an option available for this function."
       return 1
       ;;
 
@@ -106,12 +106,12 @@ get_dependencies() {
   if [ $COUNTER -gt 0 ]; then
 
     if ! sudo apt-get update; then
-      echo "Could not execute 'sudo apt-get update'"
+      echo "  MESSAGE:  Could not execute 'sudo apt-get update'"
       return 1
     fi
 
     if ! sudo apt-get install$INSTALL_STRING -y; then
-      echo "installation of$INSTALL_STRING failed"
+      echo "  MESSAGE:  installation of$INSTALL_STRING failed"
       return 1
     fi
 
@@ -201,7 +201,7 @@ check_if_running() {
       ;;
 
     *)
-      echo "$1 is not an option available for this function."
+      echo "  MESSAGE:  $1 is not an option available for this function."
       return 1
       ;;
 
@@ -261,7 +261,7 @@ download_files() {
 }
 
 check_if_pgp_key_exists_in_keyring() {
-  echo "  MESSAGE:  Checking for PGP key..."
+  echo "  MESSAGE:  Checking for PGP key in your keyring..."
   echo ""
 
   if OUT=$(gpg --list-keys 2>/dev/null) &&
