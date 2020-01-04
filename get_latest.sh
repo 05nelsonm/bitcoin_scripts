@@ -3,10 +3,10 @@
 SCRIPT_PACKAGE_NAME=$1; shift
 SCRIPT_OPTIONS=( $@ )
 
-WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
-
 SCRIPT_AVAILABLE_PACKAGES=("get-all" "bitcoin-core" "ckcc-firmware" "ckcc-protocol" "electrs" "electrum-wallet" \
                            "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
+
+WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
 
 # When using this method:
 # source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
@@ -151,20 +151,20 @@ ckcc_protocol() {
     return 1
   fi
 
-  cd Coldcard-ckcc-protocol-*
-
   if [ "$DRY_RUN" = "--dry-run" ]; then
     echo "  MESSAGE:  '--dry-run' flag set, stopping before installing anything..."
     return 1
   fi
+
+  cd Coldcard-ckcc-protocol-*
 
   pip install -r requirements.txt
 
   if sudo python3 setup.py install; then
     echo ""
     echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
-    change_dir "$DOWNLOAD_DIR"
-    clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
+    cd $WORKING_DIR
+    clean_up "--sudo" "$DOWNLOAD_DIR"
   else
     echo ""
     echo "  MESSAGE:  Installation FAILED."
@@ -225,7 +225,8 @@ wasabi_wallet() {
       echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
     fi
 
-    clean_up "$PACKAGE_NAME" "$SIGNATURE_FILE_NAME"
+    cd $WORKING_DIR
+    clean_up "$DOWNLOAD_DIR"
   else
     echo ""
     echo "  MESSAGE:  Something went wrong when installing $PACKAGE_NAME"
