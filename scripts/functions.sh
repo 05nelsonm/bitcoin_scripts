@@ -1,5 +1,19 @@
 #!/bin/bash
 
+set_script_option_variables() {
+  if contains $SCRIPT_OPTIONS "--dry-run"; then
+    DRY_RUN="--dry-run"
+  fi
+
+  if contains $SCRIPT_OPTIONS "--no-tor"; then
+    NO_TOR="--no-tor"
+  fi
+
+  if contains $SCRIPT_OPTIONS "--only-tor"; then
+    ONLY_TOR="--only-tor"
+  fi
+}
+
 display_title_message() {
   echo ""
   echo "============================================================================"
