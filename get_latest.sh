@@ -1,12 +1,12 @@
 #!/bin/bash
 
-SCRIPT_PACKAGE_NAME=$1; shift
-SCRIPT_OPTIONS=( $@ )
-
-WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+USER_DEFINED_PACKAGE=$1; shift
+USER_DEFINED_OPTIONS=( $@ )
 
 SCRIPT_AVAILABLE_PACKAGES=("get-all" "bitcoin-core" "ckcc-firmware" "ckcc-protocol" "electrs" "electrum-wallet" \
                            "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
+
+WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
 
 # When using this method:
 # source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
@@ -28,7 +28,7 @@ source_file() {
   fi
 }
 
-init_script() {
+initialize_script() {
   if ! source_file "$WORKING_DIR/scripts/functions.sh"; then
     echo "  MESSAGE:  Could not source necessary file:"
     echo "  MESSAGE:  $WORKING_DIR/scripts/functions.sh"
@@ -50,7 +50,7 @@ init_script() {
   fi
 }
 
-init_package() {
+initialize_specific_package() {
   cd $WORKING_DIR
 
   display_title_message $1
@@ -68,10 +68,13 @@ init_package() {
 
 ckcc_firmware() {
   set_download_dir ~/Coldcard-firmware
-  change_dir "$DOWNLOAD_DIR"
+
+  if ! change_dir "$DOWNLOAD_DIR"; then
+    return 1
+  fi
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_FILE_URL"; then
 
     if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
@@ -81,7 +84,7 @@ ckcc_firmware() {
 
   fi
 
-  if ! check_for_pgp_key; then
+  if ! check_if_pgp_key_exists_in_keyring; then
 
     if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
       return 1
@@ -89,19 +92,19 @@ ckcc_firmware() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
     return 1
   fi
 
-  if verify_sha256sum "$SIGNATURE_NAME"; then
-    clean_up "$SIGNATURE_NAME"
+  if verify_sha256sum "$SIGNATURE_FILE_NAME"; then
+    clean_up "$SIGNATURE_FILE_NAME"
     echo ""
     echo "  MESSAGE:  Please leave $PACKAGE_NAME in"
     echo "  MESSAGE:  $DOWNLOAD_DIR after you have"
     echo "  MESSAGE:  updated your device so this script can tell what"
     echo "  MESSAGE:  version you have installed!"
   else
-    clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
+    clean_up "$SIGNATURE_FILE_NAME" "$PACKAGE_NAME"
     return 1
   fi
 
@@ -128,7 +131,10 @@ ckcc_protocol() {
   fi
 
   set_download_dir ~/Downloads/ckcc-protocol
-  change_dir "$DOWNLOAD_DIR"
+
+  if ! change_dir "$DOWNLOAD_DIR"; then
+    return 1
+  fi
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
 
@@ -145,20 +151,20 @@ ckcc_protocol() {
     return 1
   fi
 
-  cd Coldcard-ckcc-protocol-*
-
   if [ "$DRY_RUN" = "--dry-run" ]; then
     echo "  MESSAGE:  '--dry-run' flag set, stopping before installing anything..."
     return 1
   fi
+
+  cd Coldcard-ckcc-protocol-*
 
   pip install -r requirements.txt
 
   if sudo python3 setup.py install; then
     echo ""
     echo "  MESSAGE:  ckcc-protocol-$LATEST_VERSION has been installed successfully!"
-    change_dir "$DOWNLOAD_DIR"
-    clean_up "--sudo" "$PACKAGE_NAME" "Coldcard-ckcc-protocol-*"
+    cd $WORKING_DIR
+    clean_up "--sudo" "$DOWNLOAD_DIR"
   else
     echo ""
     echo "  MESSAGE:  Installation FAILED."
@@ -171,7 +177,7 @@ ckcc_protocol() {
 wasabi_wallet() {
   if [ "$DRY_RUN" != "--dry-run" ]; then
 
-    if ! compare_current_with_newest_versions $CURRENT_VERSION $LATEST_VERSION; then
+    if ! compare_current_with_latest_version $CURRENT_VERSION $LATEST_VERSION; then
       return 1
     fi
 
@@ -182,10 +188,13 @@ wasabi_wallet() {
   fi
 
   set_download_dir ~/Downloads/wasabi-wallet
-  change_dir "$DOWNLOAD_DIR"
+
+  if ! change_dir "$DOWNLOAD_DIR"; then
+    return 1
+  fi
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_FILE_URL"; then
 
     if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
@@ -195,7 +204,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! check_for_pgp_key; then
+  if ! check_if_pgp_key_exists_in_keyring; then
 
     if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
       return 1
@@ -203,7 +212,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
     return 1
   fi
 
@@ -216,7 +225,8 @@ wasabi_wallet() {
       echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
     fi
 
-    clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
+    cd $WORKING_DIR
+    clean_up "$DOWNLOAD_DIR"
   else
     echo ""
     echo "  MESSAGE:  Something went wrong when installing $PACKAGE_NAME"
@@ -283,53 +293,59 @@ help() {
 ##                            "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
 ##                              6          7          8          9             10
 
-case $SCRIPT_PACKAGE_NAME in
+case $USER_DEFINED_PACKAGE in
+
   #Get All
   "${SCRIPT_AVAILABLE_PACKAGES[0]}")
-    init_script
+    initialize_script
 
-    if init_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
+    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
       ckcc_firmware "${SCRIPT_AVAILABLE_PACKAGES[2]}"
     fi
 
-    if init_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
+    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
       ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
     fi
 
-    if init_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
+    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
       wasabi_wallet "${SCRIPT_AVAILABLE_PACKAGES[9]}"
     fi
     ;;
+
   # Coldcard Firmware
   "${SCRIPT_AVAILABLE_PACKAGES[2]}")
-    init_script
+    initialize_script
 
-    if init_package $SCRIPT_PACKAGE_NAME; then
-      ckcc_firmware $SCRIPT_PACKAGE_NAME
+    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+      ckcc_firmware $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
+
   # Coldcard Protocol
   "${SCRIPT_AVAILABLE_PACKAGES[3]}")
-    init_script
+    initialize_script
 
-    if init_package $SCRIPT_PACKAGE_NAME; then
-      ckcc_protocol $SCRIPT_PACKAGE_NAME
+    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+      ckcc_protocol $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
+
   # Wasabi Wallet
   "${SCRIPT_AVAILABLE_PACKAGES[9]}")
-    init_script
+    initialize_script
 
-    if init_package $SCRIPT_PACKAGE_NAME; then
-      wasabi_wallet $SCRIPT_PACKAGE_NAME
+    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+      wasabi_wallet $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
+
   *)
     help
     ;;
+
 esac
 
 exit 0

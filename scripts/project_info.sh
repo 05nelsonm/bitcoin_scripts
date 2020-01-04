@@ -10,7 +10,7 @@ latest_version_error_message() {
 
 unset PGP_KEY_FINGERPRINT PGP_IMPORT_URL CURRENT_VERSION \
       LATEST_VERSION PACKAGE_NAME PACKAGE_URL \
-      SIGNATURE_NAME SIGNATURE_URL PGP_FILE_NAME \
+      SIGNATURE_FILE_NAME SIGNATURE_FILE_URL PGP_FILE_NAME \
       PGP_FILE_URL
 
 case $1 in
@@ -37,8 +37,8 @@ case $1 in
     PACKAGE_NAME="$LATEST_VERSION-coldcard.dfu"
     PACKAGE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/raw/master/releases/$PACKAGE_NAME"
 
-    SIGNATURE_NAME="signatures.txt"
-    SIGNATURE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/raw/master/releases/$SIGNATURE_NAME"
+    SIGNATURE_FILE_NAME="signatures.txt"
+    SIGNATURE_FILE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/raw/master/releases/$SIGNATURE_FILE_NAME"
     ;;
 
   ## Information obtained from:
@@ -64,8 +64,8 @@ case $1 in
     PACKAGE_URL=$(echo "$LATEST_RELEASE_JSON" | jq -r '.tarball_url')
 
     unset LATEST_RELEASE_JSON
-    #SIGNATURE_NAME=
-    #SIGNATURE_URL=
+    #SIGNATURE_FILE_NAME=
+    #SIGNATURE_FILE_URL=
     ;;
 
   ## Information obtained from:
@@ -91,9 +91,15 @@ case $1 in
     PACKAGE_NAME="Wasabi-$LATEST_VERSION.deb"
     PACKAGE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$PACKAGE_NAME"
 
-    SIGNATURE_NAME="$PACKAGE_NAME.asc"
-    SIGNATURE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$SIGNATURE_NAME"
+    SIGNATURE_FILE_NAME="$PACKAGE_NAME.asc"
+    SIGNATURE_FILE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$SIGNATURE_FILE_NAME"
     ;;
+
+  *)
+    echo "$1 is not an option available for sourcing this script."
+    return 1
+    ;;
+
 esac
 
 return 0

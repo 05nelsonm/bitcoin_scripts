@@ -1,19 +1,5 @@
 #!/bin/bash
 
-set_script_option_variables() {
-  if contains $SCRIPT_OPTIONS "--dry-run"; then
-    DRY_RUN="--dry-run"
-  fi
-
-  if contains $SCRIPT_OPTIONS "--no-tor"; then
-    NO_TOR="--no-tor"
-  fi
-
-  if contains $SCRIPT_OPTIONS "--only-tor"; then
-    ONLY_TOR="--only-tor"
-  fi
-}
-
 display_title_message() {
   echo ""
   echo "============================================================================"
@@ -26,7 +12,7 @@ display_title_message() {
   echo ""
 }
 
-contains() {
+array_contains() {
   for VALUE in $1; do
     if [ "$VALUE" = "$2" ]; then
       unset VALUE
@@ -44,36 +30,64 @@ set_download_dir() {
 }
 
 change_dir() {
-  if [ -d $DOWNLOAD_DIR ]; then
-    cd $DOWNLOAD_DIR
+  if [ "$1" != "" ]; then
+
+    if [ -d $1 ]; then
+      cd $1
+    else
+      mkdir -p $1 && cd $1
+    fi
+
+    return 0
   else
-    mkdir -p $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
+    return 1
+  fi
+}
+
+set_script_option_variables() {
+  if array_contains $USER_DEFINED_OPTIONS "--dry-run"; then
+    DRY_RUN="--dry-run"
+  fi
+
+  if array_contains $USER_DEFINED_OPTIONS "--no-tor"; then
+    NO_TOR="--no-tor"
+  fi
+
+  if array_contains $USER_DEFINED_OPTIONS "--only-tor"; then
+    ONLY_TOR="--only-tor"
   fi
 }
 
 get_dependencies() {
   case $1 in
+
     "no-specified-script-package")
       shift
       local NEEDED_DEPENDENCIES=( $@ )
       ;;
+
     # Coldcard Firmware
     "${SCRIPT_AVAILABLE_PACKAGES[2]}")
       local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
       ;;
+
     # Coldcard Protocol
     "${SCRIPT_AVAILABLE_PACKAGES[3]}")
       local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
                                  "libudev1" "libudev-dev" "python3" \
                                  "python-pip" $TORSOCKS)
       ;;
+
     # Wasabi Wallet
     "${SCRIPT_AVAILABLE_PACKAGES[9]}")
       local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
       ;;
+
     *)
-      echo "$1 is not an option available for this function."
+      echo "  MESSAGE:  $1 is not an option available for this function."
       return 1
+      ;;
+
   esac
 
   echo "  MESSAGE:  Checking for needed dependencies..."
@@ -92,12 +106,12 @@ get_dependencies() {
   if [ $COUNTER -gt 0 ]; then
 
     if ! sudo apt-get update; then
-      echo "Could not execute 'sudo apt-get update'"
+      echo "  MESSAGE:  Could not execute 'sudo apt-get update'"
       return 1
     fi
 
     if ! sudo apt-get install$INSTALL_STRING -y; then
-      echo "installation of$INSTALL_STRING failed"
+      echo "  MESSAGE:  installation of$INSTALL_STRING failed"
       return 1
     fi
 
@@ -155,16 +169,16 @@ set_tor_options() {
   fi
 }
 
-compare_current_with_newest_versions() {
+compare_current_with_latest_version() {
   local CURRENT=$1
-  local NEWEST=$2
+  local LATEST=$2
 
-  if [ "$CURRENT" != "$NEWEST" ]; then
-    echo "  MESSAGE:  An update to version $NEWEST is available!"
+  if [ "$CURRENT" != "$LATEST" ]; then
+    echo "  MESSAGE:  An update to version $LATEST is available!"
     echo ""
     return 0
   else
-    echo "  MESSAGE:  Already up to date with version $NEWEST!"
+    echo "  MESSAGE:  Already up to date with version $LATEST!"
     return 1
   fi
 }
@@ -177,6 +191,7 @@ stop_install_message() {
 
 check_if_running() {
   case $1 in
+
     # Wasabi Wallet
     "${SCRIPT_AVAILABLE_PACKAGES[9]}")
       if pgrep wassabee; then
@@ -184,15 +199,18 @@ check_if_running() {
         return 1
       fi
       ;;
+
     *)
-      echo "$1 is not an option available for this function."
+      echo "  MESSAGE:  $1 is not an option available for this function."
       return 1
+      ;;
+
   esac
 
   return 0
 }
 
-# When using this method:
+# When using this function:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
 #                                      ...
@@ -220,7 +238,7 @@ check_for_already_downloaded_package() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
 #
 # Can also use string concatenation for a single argument
@@ -242,8 +260,8 @@ download_files() {
   fi
 }
 
-check_for_pgp_key() {
-  echo "  MESSAGE:  Checking for PGP key..."
+check_if_pgp_key_exists_in_keyring() {
+  echo "  MESSAGE:  Checking for PGP key in your keyring..."
   echo ""
 
   if OUT=$(gpg --list-keys 2>/dev/null) &&
@@ -256,7 +274,7 @@ check_for_pgp_key() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
 download_and_import_pgp_keys_from_file() {
   echo "  MESSAGE:  Importing PGP key from file..."
@@ -284,7 +302,7 @@ download_and_import_pgp_keys_from_file() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # import_pgp_keys_from_url $KEY_SERVER_URL
 import_pgp_keys_from_url() {
   echo "  MESSAGE:  Importing PGP key..."
@@ -301,7 +319,7 @@ import_pgp_keys_from_url() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # verify_pgp_signature $PGP_FILE_NAME
 verify_pgp_signature() {
   echo "  MESSAGE:  Verifying PGP signature of $1..."
@@ -321,7 +339,7 @@ verify_pgp_signature() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # verify_sha256sum $SHA256SUM_FILE
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
@@ -343,7 +361,7 @@ verify_sha256sum() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # clean_up $FILE_1 $FILE_2 ...
 #
 # Can also send `--sudo` as the first argument to
