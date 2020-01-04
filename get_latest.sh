@@ -1,9 +1,12 @@
 #!/bin/bash
 
-SCRIPT_PACKAGE=$1; shift
+SCRIPT_PACKAGE_NAME=$1; shift
 SCRIPT_OPTIONS=( $@ )
 
 WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
+
+SCRIPT_AVAILABLE_PACKAGES=("get-all" "bitcoin-core" "ckcc-firmware" "ckcc-protocol" "electrs" "electrum-wallet" \
+                           "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
 
 # When using this method:
 # source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
@@ -232,18 +235,22 @@ help() {
   echo ""
   echo "[PACKAGE-NAME]"
   echo ""
-  echo "    get-all .  .  .  .  . +  Cycles through all of the below listed"
+#           Get All
+  echo "    ${SCRIPT_AVAILABLE_PACKAGES[0]} .  .  .  .  . +  Cycles through all of the below listed"
   echo "                          +  packages & updates/installs them."
   echo ""
-  echo "    ckcc-firmware .  .  . +  Downloads the latest Coldcard firmware."
+#           Coldcard Firmware
+  echo "    ${SCRIPT_AVAILABLE_PACKAGES[2]} .  .  . +  Downloads the latest Coldcard firmware."
   echo "                          +"
   echo "                          +  Running this will *ALWAYS* re-verify the"
   echo "                          +  package for you if it already exists."
   echo ""
-  echo "    ckcc-protocol .  .  . +  Installs the latest Coldcard protocol"
+#           Coldcard Protocol
+  echo "    ${SCRIPT_AVAILABLE_PACKAGES[3]} .  .  . +  Installs the latest Coldcard protocol"
   echo "                          +  (primarily needed for Electrum Wallet)."
   echo ""
-  echo "    wasabi-wallet .  .  . +  Installs the latest .deb package"
+#           Wasabi Wallet
+  echo "    ${SCRIPT_AVAILABLE_PACKAGES[9]} .  .  . +  Installs the latest .deb package"
   echo "                          +  of Wasabi Wallet."
   echo ""
   echo "[OPTIONS]"
@@ -271,37 +278,52 @@ help() {
   echo ""
 }
 
-init_script
+##                                0           1               2               3            4            5
+## SCRIPT_AVAILABLE_PACKAGES=("get-all" "bitcoin-core" "ckcc-firmware" "ckcc-protocol" "electrs" "electrum-wallet" \
+##                            "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
+##                              6          7          8          9             10
 
-case $SCRIPT_PACKAGE in
-  "get-all")
-    if init_package "ckcc-firmware"; then
-      ckcc_firmware "ckcc-firmware"
+case $SCRIPT_PACKAGE_NAME in
+  #Get All
+  "${SCRIPT_AVAILABLE_PACKAGES[0]}")
+    init_script
+
+    if init_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
+      ckcc_firmware "${SCRIPT_AVAILABLE_PACKAGES[2]}"
     fi
 
-    if init_package "ckcc-protocol"; then
-      ckcc_protocol "ckcc-protocol"
+    if init_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
+      ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
     fi
 
-    if init_package "wasabi-wallet"; then
-      wasabi_wallet "wasabi-wallet"
+    if init_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
+      wasabi_wallet "${SCRIPT_AVAILABLE_PACKAGES[9]}"
     fi
     ;;
-  "ckcc-firmware")
-    if init_package $SCRIPT_PACKAGE; then
-      ckcc_firmware $SCRIPT_PACKAGE
+  # Coldcard Firmware
+  "${SCRIPT_AVAILABLE_PACKAGES[2]}")
+    init_script
+
+    if init_package $SCRIPT_PACKAGE_NAME; then
+      ckcc_firmware $SCRIPT_PACKAGE_NAME
     fi
     echo ""
     ;;
-  "ckcc-protocol")
-    if init_package $SCRIPT_PACKAGE; then
-      ckcc_protocol $SCRIPT_PACKAGE
+  # Coldcard Protocol
+  "${SCRIPT_AVAILABLE_PACKAGES[3]}")
+    init_script
+
+    if init_package $SCRIPT_PACKAGE_NAME; then
+      ckcc_protocol $SCRIPT_PACKAGE_NAME
     fi
     echo ""
     ;;
-  "wasabi-wallet")
-    if init_package $SCRIPT_PACKAGE; then
-      wasabi_wallet $SCRIPT_PACKAGE
+  # Wasabi Wallet
+  "${SCRIPT_AVAILABLE_PACKAGES[9]}")
+    init_script
+
+    if init_package $SCRIPT_PACKAGE_NAME; then
+      wasabi_wallet $SCRIPT_PACKAGE_NAME
     fi
     echo ""
     ;;
