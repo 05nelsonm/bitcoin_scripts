@@ -2,7 +2,6 @@
 
 SCRIPT_PACKAGE=$1; shift
 SCRIPT_OPTIONS=( $@ )
-INIT_COUNTER=0
 
 WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
 
@@ -67,9 +66,11 @@ init_script() {
 }
 
 init_package() {
+  cd $WORKING_DIR
+
   display_title_message $1
 
-  if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" $1; then
+  if ! get_dependencies $1; then
     return 1
   fi
 

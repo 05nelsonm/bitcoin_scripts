@@ -37,6 +37,62 @@ change_dir() {
   fi
 }
 
+get_dependencies() {
+  case $1 in
+    "no-specified-package")
+      shift
+      local NEEDED_DEPENDENCIES=( $@ )
+      ;;
+    "ckcc-firmware")
+      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+      ;;
+    "ckcc-protocol")
+      local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
+                                 "libudev1" "libudev-dev" "python3" \
+                                 "python-pip" $TORSOCKS_PKG)
+      ;;
+    "wasabi-wallet")
+      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+      ;;
+    *)
+      echo "$1 is not an option available for this function."
+      return 1
+  esac
+
+  echo "  MESSAGE:  Checking for needed dependencies..."
+  echo ""
+
+  local COUNTER=0
+
+  for PACKAGE in ${NEEDED_DEPENDENCIES[*]}; do
+    if ! dpkg -l $PACKAGE > /dev/null 2>&1; then
+      local INSTALL_STRING+=" $PACKAGE"
+      let COUNTER++
+    fi
+  done
+  unset PACKAGE
+
+  if [ $COUNTER -gt 0 ]; then
+
+    if ! sudo apt-get update; then
+      echo "Could not execute 'sudo apt-get update'"
+      return 1
+    fi
+
+    if ! sudo apt-get install$INSTALL_STRING -y; then
+      echo "installation of$INSTALL_STRING failed"
+      return 1
+    fi
+
+    return 0
+
+  else
+    echo "  MESSAGE:  All needed dependencies are present!"
+    echo ""
+    return 0
+  fi
+}
+
 # When using this method:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \

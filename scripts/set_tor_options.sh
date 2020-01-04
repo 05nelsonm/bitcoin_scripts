@@ -6,7 +6,7 @@ if command -v tor 1>/dev/null; then
 
   if ! command -v curl 1>/dev/null; then
 
-    if ! source_file "$WORKING_DIR/scripts/get_dependencies.sh" "no-specified-package" "curl"; then
+    if ! get_dependencies "no-specified-package" "curl"; then
       echo "Curl needs to be installed to go any further... Stopping the script."
       exit 1
     fi
