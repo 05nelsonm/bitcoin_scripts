@@ -68,7 +68,10 @@ init_package() {
 
 ckcc_firmware() {
   set_download_dir ~/Coldcard-firmware
-  change_dir "$DOWNLOAD_DIR"
+
+  if ! change_dir "$DOWNLOAD_DIR"; then
+    return 1
+  fi
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                                             "$SIGNATURE_FILE_NAME" "$SIGNATURE_FILE_URL"; then
@@ -128,7 +131,10 @@ ckcc_protocol() {
   fi
 
   set_download_dir ~/Downloads/ckcc-protocol
-  change_dir "$DOWNLOAD_DIR"
+
+  if ! change_dir "$DOWNLOAD_DIR"; then
+    return 1
+  fi
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL"; then
 
@@ -182,7 +188,10 @@ wasabi_wallet() {
   fi
 
   set_download_dir ~/Downloads/wasabi-wallet
-  change_dir "$DOWNLOAD_DIR"
+
+  if ! change_dir "$DOWNLOAD_DIR"; then
+    return 1
+  fi
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
                                             "$SIGNATURE_FILE_NAME" "$SIGNATURE_FILE_URL"; then

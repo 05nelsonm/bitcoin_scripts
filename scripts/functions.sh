@@ -30,10 +30,17 @@ set_download_dir() {
 }
 
 change_dir() {
-  if [ -d $DOWNLOAD_DIR ]; then
-    cd $DOWNLOAD_DIR
+  if [ "$1" != "" ]; then
+
+    if [ -d $1 ]; then
+      cd $1
+    else
+      mkdir -p $1 && cd $1
+    fi
+
+    return 0
   else
-    mkdir -p $DOWNLOAD_DIR && cd $DOWNLOAD_DIR
+    return 1
   fi
 }
 
