@@ -12,7 +12,7 @@ display_title_message() {
   echo ""
 }
 
-contains() {
+array_contains() {
   for VALUE in $1; do
     if [ "$VALUE" = "$2" ]; then
       unset VALUE
@@ -38,15 +38,15 @@ change_dir() {
 }
 
 set_script_option_variables() {
-  if contains $SCRIPT_OPTIONS "--dry-run"; then
+  if array_contains $SCRIPT_OPTIONS "--dry-run"; then
     DRY_RUN="--dry-run"
   fi
 
-  if contains $SCRIPT_OPTIONS "--no-tor"; then
+  if array_contains $SCRIPT_OPTIONS "--no-tor"; then
     NO_TOR="--no-tor"
   fi
 
-  if contains $SCRIPT_OPTIONS "--only-tor"; then
+  if array_contains $SCRIPT_OPTIONS "--only-tor"; then
     ONLY_TOR="--only-tor"
   fi
 }
