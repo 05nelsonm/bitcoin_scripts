@@ -71,7 +71,7 @@ ckcc_firmware() {
   change_dir "$DOWNLOAD_DIR"
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_URL"; then
+                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_FILE_URL"; then
 
     if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
@@ -185,7 +185,7 @@ wasabi_wallet() {
   change_dir "$DOWNLOAD_DIR"
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_URL"; then
+                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_FILE_URL"; then
 
     if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
