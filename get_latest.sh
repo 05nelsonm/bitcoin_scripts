@@ -28,7 +28,7 @@ source_file() {
   fi
 }
 
-init_script() {
+initialize_script() {
   if ! source_file "$WORKING_DIR/scripts/functions.sh"; then
     echo "  MESSAGE:  Could not source necessary file:"
     echo "  MESSAGE:  $WORKING_DIR/scripts/functions.sh"
@@ -50,7 +50,7 @@ init_script() {
   fi
 }
 
-init_package() {
+initialize_specific_package() {
   cd $WORKING_DIR
 
   display_title_message $1
@@ -297,26 +297,26 @@ case $SCRIPT_PACKAGE_NAME in
 
   #Get All
   "${SCRIPT_AVAILABLE_PACKAGES[0]}")
-    init_script
+    initialize_script
 
-    if init_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
+    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
       ckcc_firmware "${SCRIPT_AVAILABLE_PACKAGES[2]}"
     fi
 
-    if init_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
+    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
       ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
     fi
 
-    if init_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
+    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
       wasabi_wallet "${SCRIPT_AVAILABLE_PACKAGES[9]}"
     fi
     ;;
 
   # Coldcard Firmware
   "${SCRIPT_AVAILABLE_PACKAGES[2]}")
-    init_script
+    initialize_script
 
-    if init_package $SCRIPT_PACKAGE_NAME; then
+    if initialize_specific_package $SCRIPT_PACKAGE_NAME; then
       ckcc_firmware $SCRIPT_PACKAGE_NAME
     fi
     echo ""
@@ -324,9 +324,9 @@ case $SCRIPT_PACKAGE_NAME in
 
   # Coldcard Protocol
   "${SCRIPT_AVAILABLE_PACKAGES[3]}")
-    init_script
+    initialize_script
 
-    if init_package $SCRIPT_PACKAGE_NAME; then
+    if initialize_specific_package $SCRIPT_PACKAGE_NAME; then
       ckcc_protocol $SCRIPT_PACKAGE_NAME
     fi
     echo ""
@@ -334,9 +334,9 @@ case $SCRIPT_PACKAGE_NAME in
 
   # Wasabi Wallet
   "${SCRIPT_AVAILABLE_PACKAGES[9]}")
-    init_script
+    initialize_script
 
-    if init_package $SCRIPT_PACKAGE_NAME; then
+    if initialize_specific_package $SCRIPT_PACKAGE_NAME; then
       wasabi_wallet $SCRIPT_PACKAGE_NAME
     fi
     echo ""
