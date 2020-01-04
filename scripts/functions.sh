@@ -74,6 +74,7 @@ get_dependencies() {
     *)
       echo "$1 is not an option available for this function."
       return 1
+      ;;
   esac
 
   echo "  MESSAGE:  Checking for needed dependencies..."
@@ -187,6 +188,7 @@ check_if_running() {
     *)
       echo "$1 is not an option available for this function."
       return 1
+      ;;
   esac
 
   return 0
