@@ -210,7 +210,7 @@ check_if_running() {
   return 0
 }
 
-# When using this method:
+# When using this function:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
 #                                      ...
@@ -238,7 +238,7 @@ check_for_already_downloaded_package() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
 #
 # Can also use string concatenation for a single argument
@@ -274,7 +274,7 @@ check_if_pgp_key_exists_in_keyring() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
 download_and_import_pgp_keys_from_file() {
   echo "  MESSAGE:  Importing PGP key from file..."
@@ -302,7 +302,7 @@ download_and_import_pgp_keys_from_file() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # import_pgp_keys_from_url $KEY_SERVER_URL
 import_pgp_keys_from_url() {
   echo "  MESSAGE:  Importing PGP key..."
@@ -319,7 +319,7 @@ import_pgp_keys_from_url() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # verify_pgp_signature $PGP_FILE_NAME
 verify_pgp_signature() {
   echo "  MESSAGE:  Verifying PGP signature of $1..."
@@ -339,7 +339,7 @@ verify_pgp_signature() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # verify_sha256sum $SHA256SUM_FILE
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
@@ -361,7 +361,7 @@ verify_sha256sum() {
   fi
 }
 
-# When using this method:
+# When using this function:
 # clean_up $FILE_1 $FILE_2 ...
 #
 # Can also send `--sudo` as the first argument to
