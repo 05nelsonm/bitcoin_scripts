@@ -95,6 +95,11 @@ case $1 in
     SIGNATURE_FILE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$SIGNATURE_FILE_NAME"
     ;;
 
+  *)
+    echo "$1 is not an option available for sourcing this script."
+    return 1
+    ;;
+
 esac
 
 return 0
