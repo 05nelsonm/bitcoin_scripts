@@ -94,6 +94,7 @@ case $1 in
     SIGNATURE_FILE_NAME="$PACKAGE_NAME.asc"
     SIGNATURE_FILE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/v$LATEST_VERSION/$SIGNATURE_FILE_NAME"
     ;;
+
 esac
 
 return 0

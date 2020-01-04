@@ -293,6 +293,7 @@ help() {
 ##                              6          7          8          9             10
 
 case $SCRIPT_PACKAGE_NAME in
+
   #Get All
   "${SCRIPT_AVAILABLE_PACKAGES[0]}")
     init_script
@@ -309,6 +310,7 @@ case $SCRIPT_PACKAGE_NAME in
       wasabi_wallet "${SCRIPT_AVAILABLE_PACKAGES[9]}"
     fi
     ;;
+
   # Coldcard Firmware
   "${SCRIPT_AVAILABLE_PACKAGES[2]}")
     init_script
@@ -318,6 +320,7 @@ case $SCRIPT_PACKAGE_NAME in
     fi
     echo ""
     ;;
+
   # Coldcard Protocol
   "${SCRIPT_AVAILABLE_PACKAGES[3]}")
     init_script
@@ -327,6 +330,7 @@ case $SCRIPT_PACKAGE_NAME in
     fi
     echo ""
     ;;
+
   # Wasabi Wallet
   "${SCRIPT_AVAILABLE_PACKAGES[9]}")
     init_script
@@ -336,9 +340,11 @@ case $SCRIPT_PACKAGE_NAME in
     fi
     echo ""
     ;;
+
   *)
     help
     ;;
+
 esac
 
 exit 0

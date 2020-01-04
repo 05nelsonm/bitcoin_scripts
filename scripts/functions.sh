@@ -60,28 +60,34 @@ set_script_option_variables() {
 
 get_dependencies() {
   case $1 in
+
     "no-specified-script-package")
       shift
       local NEEDED_DEPENDENCIES=( $@ )
       ;;
+
     # Coldcard Firmware
     "${SCRIPT_AVAILABLE_PACKAGES[2]}")
       local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
       ;;
+
     # Coldcard Protocol
     "${SCRIPT_AVAILABLE_PACKAGES[3]}")
       local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
                                  "libudev1" "libudev-dev" "python3" \
                                  "python-pip" $TORSOCKS)
       ;;
+
     # Wasabi Wallet
     "${SCRIPT_AVAILABLE_PACKAGES[9]}")
       local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
       ;;
+
     *)
       echo "$1 is not an option available for this function."
       return 1
       ;;
+
   esac
 
   echo "  MESSAGE:  Checking for needed dependencies..."
@@ -185,6 +191,7 @@ stop_install_message() {
 
 check_if_running() {
   case $1 in
+
     # Wasabi Wallet
     "${SCRIPT_AVAILABLE_PACKAGES[9]}")
       if pgrep wassabee; then
@@ -192,10 +199,12 @@ check_if_running() {
         return 1
       fi
       ;;
+
     *)
       echo "$1 is not an option available for this function."
       return 1
       ;;
+
   esac
 
   return 0
