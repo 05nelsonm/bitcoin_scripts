@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SCRIPT_PACKAGE_NAME=$1; shift
-SCRIPT_OPTIONS=( $@ )
+USER_DEFINED_PACKAGE=$1; shift
+USER_DEFINED_OPTIONS=( $@ )
 
 SCRIPT_AVAILABLE_PACKAGES=("get-all" "bitcoin-core" "ckcc-firmware" "ckcc-protocol" "electrs" "electrum-wallet" \
                            "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
@@ -293,7 +293,7 @@ help() {
 ##                            "lnd" "samourai-dojo" "tor" "wasabi-wallet" "zap-desktop")
 ##                              6          7          8          9             10
 
-case $SCRIPT_PACKAGE_NAME in
+case $USER_DEFINED_PACKAGE in
 
   #Get All
   "${SCRIPT_AVAILABLE_PACKAGES[0]}")
@@ -316,8 +316,8 @@ case $SCRIPT_PACKAGE_NAME in
   "${SCRIPT_AVAILABLE_PACKAGES[2]}")
     initialize_script
 
-    if initialize_specific_package $SCRIPT_PACKAGE_NAME; then
-      ckcc_firmware $SCRIPT_PACKAGE_NAME
+    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+      ckcc_firmware $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
@@ -326,8 +326,8 @@ case $SCRIPT_PACKAGE_NAME in
   "${SCRIPT_AVAILABLE_PACKAGES[3]}")
     initialize_script
 
-    if initialize_specific_package $SCRIPT_PACKAGE_NAME; then
-      ckcc_protocol $SCRIPT_PACKAGE_NAME
+    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+      ckcc_protocol $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
@@ -336,8 +336,8 @@ case $SCRIPT_PACKAGE_NAME in
   "${SCRIPT_AVAILABLE_PACKAGES[9]}")
     initialize_script
 
-    if initialize_specific_package $SCRIPT_PACKAGE_NAME; then
-      wasabi_wallet $SCRIPT_PACKAGE_NAME
+    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+      wasabi_wallet $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
