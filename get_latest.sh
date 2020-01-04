@@ -71,7 +71,7 @@ ckcc_firmware() {
   change_dir "$DOWNLOAD_DIR"
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_URL"; then
 
     if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
@@ -89,19 +89,19 @@ ckcc_firmware() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
     return 1
   fi
 
-  if verify_sha256sum "$SIGNATURE_NAME"; then
-    clean_up "$SIGNATURE_NAME"
+  if verify_sha256sum "$SIGNATURE_FILE_NAME"; then
+    clean_up "$SIGNATURE_FILE_NAME"
     echo ""
     echo "  MESSAGE:  Please leave $PACKAGE_NAME in"
     echo "  MESSAGE:  $DOWNLOAD_DIR after you have"
     echo "  MESSAGE:  updated your device so this script can tell what"
     echo "  MESSAGE:  version you have installed!"
   else
-    clean_up "$SIGNATURE_NAME" "$PACKAGE_NAME"
+    clean_up "$SIGNATURE_FILE_NAME" "$PACKAGE_NAME"
     return 1
   fi
 
@@ -185,7 +185,7 @@ wasabi_wallet() {
   change_dir "$DOWNLOAD_DIR"
 
   if ! check_for_already_downloaded_package "$PACKAGE_NAME" "$PACKAGE_URL" \
-                                            "$SIGNATURE_NAME" "$SIGNATURE_URL"; then
+                                            "$SIGNATURE_FILE_NAME" "$SIGNATURE_URL"; then
 
     if ! download_files "$DOWNLOAD_STRING"; then
       unset DOWNLOAD_STRING
@@ -203,7 +203,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
     return 1
   fi
 
@@ -216,7 +216,7 @@ wasabi_wallet() {
       echo "  MESSAGE:  $PACKAGE_NAME has been installed successfully!"
     fi
 
-    clean_up "$PACKAGE_NAME" "$SIGNATURE_NAME"
+    clean_up "$PACKAGE_NAME" "$SIGNATURE_FILE_NAME"
   else
     echo ""
     echo "  MESSAGE:  Something went wrong when installing $PACKAGE_NAME"
