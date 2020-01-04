@@ -57,11 +57,7 @@ init_script() {
   set_script_option_variables
 
   if [ "$NO_TOR" != "--no-tor" ]; then
-
-    if ! source_file "$WORKING_DIR/scripts/set_tor_options.sh"; then
-      return 1
-    fi
-
+    set_tor_options
   fi
 }
 

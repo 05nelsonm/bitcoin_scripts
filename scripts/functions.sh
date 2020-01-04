@@ -39,20 +39,20 @@ change_dir() {
 
 get_dependencies() {
   case $1 in
-    "no-specified-package")
+    "no-specified-script-package")
       shift
       local NEEDED_DEPENDENCIES=( $@ )
       ;;
     "ckcc-firmware")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
       ;;
     "ckcc-protocol")
       local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
                                  "libudev1" "libudev-dev" "python3" \
-                                 "python-pip" $TORSOCKS_PKG)
+                                 "python-pip" $TORSOCKS)
       ;;
     "wasabi-wallet")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS_PKG)
+      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
       ;;
     *)
       echo "$1 is not an option available for this function."
@@ -93,6 +93,51 @@ get_dependencies() {
   fi
 }
 
+set_tor_options() {
+  if command -v tor 1>/dev/null; then
+    echo "  MESSAGE:  Checking for Tor connectivity..."
+    echo ""
+
+    if ! command -v curl 1>/dev/null; then
+
+      if ! get_dependencies "no-specified-script-package" "curl"; then
+        echo "  MESSAGE:  Curl needs to be installed to go any further..."
+        exit 1
+      fi
+
+    fi
+
+    if OUT=$(curl --socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT \
+             https://check.torproject.org/ | cat | grep -m 1 "Congratulations" \
+             | xargs) && echo "$OUT" | grep -qs "Congratulations"; then
+      echo ""
+      echo "  MESSAGE:  Tor connectivity check: SUCCESSFUL"
+      echo "  MESSAGE:  Downloads will occur over Tor!"
+
+      TORSOCKS="torsocks"
+      CURL_TOR_FLAG="--socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT"
+    elif [ "$ONLY_TOR" = "--only-tor" ]; then
+      echo ""
+      echo "  MESSAGE:  Tor connectivity check: FAILED"
+      echo "  MESSAGE:  Exiting because flag --only-tor was expressed"
+      exit 1
+    else
+      echo ""
+      echo "  MESSAGE:  Tor connectivity check: FAILED"
+      echo "  MESSAGE:  Downloads will occur over clearnet"
+    fi
+
+    echo ""
+    unset OUT
+
+  elif [ "$ONLY_TOR" = "--only-tor" ]; then
+    echo ""
+    echo "  MESSAGE:  Tor is not installed"
+    echo "  MESSAGE:  Exiting because flag --only-tor was expressed"
+    exit 1
+  fi
+}
+
 # When using this method:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
@@ -130,12 +175,12 @@ download_files() {
   echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
 
-  if $WGET_TOR_FLAG wget $@; then
+  if $TORSOCKS wget $@; then
     return 0
   else
     echo "  MESSAGE:  Something went wrong with the download"
 
-    if [ $WGET_TOR_FLAG != "" ]; then
+    if [ $TORSOCKS = "torsocks" ]; then
       echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
     fi
 
