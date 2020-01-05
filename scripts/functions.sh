@@ -325,10 +325,12 @@ import_pgp_keys_from_url() {
 # When using this function:
 # import_pgp_keys_from_url $KEY_SERVER_URL
 
+  local KEY_SERVER_URL=$1
+
   echo "  MESSAGE:  Importing PGP key..."
   echo ""
 
-  if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
+  if curl -s $CURL_TOR_FLAG $KEY_SERVER_URL | gpg --import 2>/dev/null; then
     echo "  MESSAGE:  PGP keys have been successfully imported!"
     echo ""
     return 0
