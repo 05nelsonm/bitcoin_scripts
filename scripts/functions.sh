@@ -118,13 +118,12 @@ clean_up() {
     fi
 
     local ARGUMENTS=( $@ )
-    local CLEAN_UP_DIR=$(pwd)
 
     for ((i=0; i < $#; i++)); do
       if ! [ -z "${ARGUMENTS[$i]}" ]; then
         if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
           $SUDO rm -rf "${ARGUMENTS[$i]}"
-          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+          echo "  DELETED:  ${ARGUMENTS[$i]}"
         fi
       fi
     done
