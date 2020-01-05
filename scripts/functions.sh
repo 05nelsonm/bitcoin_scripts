@@ -57,6 +57,35 @@ check_if_running() {
   return 0
 }
 
+check_for_already_downloaded_package() {
+# When using this function:
+# check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
+#                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
+#                                      ...
+
+  echo "  MESSAGE:  Checking if package(s) have already been downloaded..."
+  echo ""
+
+  local ARGUMENTS=( $@ )
+  local COUNTER=0
+  for ((i=0; i < $#; i+=2)); do
+    if ! [ -z "${ARGUMENTS[$i]}" ]; then
+      if ! [ -f "${ARGUMENTS[$i]}" ]; then
+        DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
+        let COUNTER++
+      fi
+    fi
+  done
+
+  if [ $COUNTER -eq 0 ]; then
+    echo "  MESSAGE:  Packages are already downloaded"
+    echo ""
+    return 0
+  else
+    return 1
+  fi
+}
+
 compare_current_with_latest_version() {
   local CURRENT=$1
   local LATEST=$2
@@ -287,34 +316,6 @@ stop_install_message() {
 
 ### Z #######################
 #############################
-
-# When using this function:
-# check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
-#                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
-#                                      ...
-check_for_already_downloaded_package() {
-  echo "  MESSAGE:  Checking if package(s) have already been downloaded..."
-  echo ""
-
-  local ARGUMENTS=( $@ )
-  local COUNTER=0
-  for ((i=0; i < $#; i+=2)); do
-    if ! [ -z "${ARGUMENTS[$i]}" ]; then
-      if ! [ -f "${ARGUMENTS[$i]}" ]; then
-        DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
-        let COUNTER++
-      fi
-    fi
-  done
-
-  if [ $COUNTER -eq 0 ]; then
-    echo "  MESSAGE:  Packages are already downloaded"
-    echo ""
-    return 0
-  else
-    return 1
-  fi
-}
 
 # When using this function:
 # download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
