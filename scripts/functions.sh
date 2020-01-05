@@ -217,15 +217,17 @@ download_files() {
 # Can also use string concatenation for a single argument
 # if URLs are separated by spaces.
 
+  local DOWNLOAD_URLS=( $@ )
+
   echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
   echo ""
 
-  if $TORSOCKS wget $@; then
+  if $TORSOCKS wget "$DOWNLOAD_URLS"; then
     return 0
   else
     echo "  MESSAGE:  Something went wrong with the download"
 
-    if [ $TORSOCKS = "torsocks" ]; then
+    if [ "$TORSOCKS" = "torsocks" ]; then
       echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
     fi
 
