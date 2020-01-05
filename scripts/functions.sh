@@ -33,12 +33,14 @@ array_contains() {
 #####################################################################################
 
 change_dir() {
-  if [ "$1" != "" ]; then
+  local DIRECTORY=$1
 
-    if [ -d $1 ]; then
-      cd $1
+  if [ "$DIRECTORY" != "" ]; then
+
+    if [ -d $DIRECTORY ]; then
+      cd $DIRECTORY
     else
-      mkdir -p $1 && cd $1
+      mkdir -p $DIRECTORY && cd $DIRECTORY
     fi
 
     return 0
