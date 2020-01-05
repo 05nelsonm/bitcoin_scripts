@@ -36,6 +36,20 @@ change_dir() {
   fi
 }
 
+compare_current_with_latest_version() {
+  local CURRENT=$1
+  local LATEST=$2
+
+  if [ "$CURRENT" != "$LATEST" ]; then
+    echo "  MESSAGE:  An update to version $LATEST is available!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Already up to date with version $LATEST!"
+    return 1
+  fi
+}
+
 ### D #######################
 #############################
 
@@ -246,20 +260,6 @@ set_tor_options() {
 
 ### Z #######################
 #############################
-
-compare_current_with_latest_version() {
-  local CURRENT=$1
-  local LATEST=$2
-
-  if [ "$CURRENT" != "$LATEST" ]; then
-    echo "  MESSAGE:  An update to version $LATEST is available!"
-    echo ""
-    return 0
-  else
-    echo "  MESSAGE:  Already up to date with version $LATEST!"
-    return 1
-  fi
-}
 
 stop_install_message() {
   echo "  MESSAGE:  An update to $LATEST_VERSION is available."
