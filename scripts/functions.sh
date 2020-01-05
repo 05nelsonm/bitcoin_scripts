@@ -218,8 +218,9 @@ download_files() {
 # if URLs are separated by spaces.
 
   local DOWNLOAD_URLS=( $@ )
+  local CURRENT_DIR=$(pwd)
 
-  echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
+  echo "  MESSAGE:  Downloading package(s) to $CURRENT_DIR..."
   echo ""
 
   if $TORSOCKS wget "$DOWNLOAD_URLS"; then
