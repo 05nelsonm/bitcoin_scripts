@@ -129,6 +129,35 @@ display_title_message() {
   echo ""
 }
 
+download_and_import_pgp_keys_from_file() {
+# When using this function:
+# download_and_import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
+
+  echo "  MESSAGE:  Importing PGP key from file..."
+  echo ""
+
+  if [ -f $1 ]; then
+    mv "$1" "$1.previous"
+    echo "  MESSAGE:  $1 already existed and was renamed to $1.previous"
+    echo ""
+  fi
+
+  if ! download_files "$2"; then
+    return 1
+  fi
+
+  if gpg --import "$1" 2>/dev/null; then
+    rm -rf "$1"
+    echo "  MESSAGE:  PGP keys have been successfully imported!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Failed to import PGP key to verify signature"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
+    return 1
+  fi
+}
+
 download_files() {
 # When using this function:
 # download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
@@ -353,34 +382,6 @@ stop_install_message() {
 
 ### Z #######################
 #############################
-
-# When using this function:
-# import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
-download_and_import_pgp_keys_from_file() {
-  echo "  MESSAGE:  Importing PGP key from file..."
-  echo ""
-
-  if [ -f $1 ]; then
-    mv "$1" "$1.previous"
-    echo "  MESSAGE:  $1 already existed and was renamed to $1.previous"
-    echo ""
-  fi
-
-  if ! download_files "$2"; then
-    return 1
-  fi
-
-  if gpg --import "$1" 2>/dev/null; then
-    rm -rf "$1"
-    echo "  MESSAGE:  PGP keys have been successfully imported!"
-    echo ""
-    return 0
-  else
-    echo "  MESSAGE:  Failed to import PGP key to verify signature"
-    echo "  MESSAGE:  Check gpg settings and re-run the script"
-    return 1
-  fi
-}
 
 # When using this function:
 # import_pgp_keys_from_url $KEY_SERVER_URL
