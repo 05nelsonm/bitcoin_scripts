@@ -182,23 +182,26 @@ download_and_import_pgp_keys_from_file() {
 # When using this function:
 # download_and_import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
 
+  local FILE=$1
+  local DOWNLOAD_URL=$2
+
   echo "  MESSAGE:  Importing PGP key from file..."
   echo ""
 
-  if [ -f $1 ]; then
-    mv "$1" "$1.previous"
-    echo "  MESSAGE:  $1 already existed and was renamed to $1.previous"
+  if [ -f $FILE ]; then
+    mv "$FILE" "$FILE.previous"
+    echo "  MESSAGE:  $FILE already existed and was renamed to $FILE.previous"
     echo ""
   fi
 
-  if ! download_files "$2"; then
+  if ! download_files "$DOWNLOAD_URL"; then
     return 1
   fi
 
-  if gpg --import "$1" 2>/dev/null; then
-    rm -rf "$1"
+  if gpg --import "$FILE" 2>/dev/null; then
     echo "  MESSAGE:  PGP keys have been successfully imported!"
     echo ""
+    clean_up "$FILE"
     return 0
   else
     echo "  MESSAGE:  Failed to import PGP key to verify signature"
