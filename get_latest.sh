@@ -99,7 +99,7 @@ ckcc_firmware() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME" "$PGP_KEY_FINGERPRINT"; then
     return 1
   fi
 
@@ -219,7 +219,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME" "$PGP_KEY_FINGERPRINT"; then
     return 1
   fi
 

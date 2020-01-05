@@ -432,19 +432,22 @@ stop_install_message() {
 
 verify_pgp_signature() {
 # When using this function:
-# verify_pgp_signature $PGP_FILE_NAME
+# verify_pgp_signature $SIGNATURE_FILE_NAME $PGP_KEY_FINGERPRINT
+
+  local FILE=$1
+  local FINGERPRINT=$2
 
   echo "  MESSAGE:  Verifying PGP signature of $1..."
   echo ""
 
-  if OUT=$(gpg --status-fd 1 --verify "$1" 2>/dev/null) &&
-           echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $PGP_KEY_FINGERPRINT "; then
-    echo "  MESSAGE:  PGP signature for $1 was GOOD!"
+  if OUT=$(gpg --status-fd 1 --verify "$FILE" 2>/dev/null) &&
+           echo "$OUT" | grep -qs "^\[GNUPG:\] VALIDSIG $FINGERPRINT "; then
+    echo "  MESSAGE:  PGP signature for $FILE was GOOD!"
     echo ""
     unset OUT
     return 0
   else
-    echo "  MESSAGE:  PGP signature for $1 was BAD"
+    echo "  MESSAGE:  PGP signature for $FILE was BAD"
     echo "  MESSAGE:  Check gpg settings and re-run the script"
     unset OUT
     return 1
