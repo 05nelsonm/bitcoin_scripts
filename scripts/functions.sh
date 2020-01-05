@@ -100,6 +100,35 @@ check_for_already_downloaded_package() {
   fi
 }
 
+clean_up() {
+# When using this function:
+# clean_up $FILE_1 $FILE_2 ...
+#
+# Can also send `--sudo` as the first argument to
+# make this method call `sudo rm -rf ...`
+
+  if [ "$DRY_RUN" != "--dry-run" ]; then
+
+    if [ $1 = --sudo ]; then
+      local SUDO="sudo"
+      shift
+    fi
+
+    local ARGUMENTS=( $@ )
+    local CLEAN_UP_DIR=$(pwd)
+
+    for ((i=0; i < $#; i++)); do
+      if ! [ -z "${ARGUMENTS[$i]}" ]; then
+        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
+          $SUDO rm -rf "${ARGUMENTS[$i]}"
+          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+        fi
+      fi
+    done
+
+  fi
+}
+
 compare_current_with_latest_version() {
   local CURRENT=$1
   local LATEST=$2
@@ -444,31 +473,3 @@ verify_sha256sum() {
 
 ### Z #######################
 #############################
-
-# When using this function:
-# clean_up $FILE_1 $FILE_2 ...
-#
-# Can also send `--sudo` as the first argument to
-# make this method call `sudo rm -rf ...`
-clean_up() {
-  if [ "$DRY_RUN" != "--dry-run" ]; then
-
-    if [ $1 = --sudo ]; then
-      local SUDO="sudo"
-      shift
-    fi
-
-    local ARGUMENTS=( $@ )
-    local CLEAN_UP_DIR=$(pwd)
-
-    for ((i=0; i < $#; i++)); do
-      if ! [ -z "${ARGUMENTS[$i]}" ]; then
-        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
-          $SUDO rm -rf "${ARGUMENTS[$i]}"
-          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
-        fi
-      fi
-    done
-
-  fi
-}
