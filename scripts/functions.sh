@@ -115,6 +115,29 @@ display_title_message() {
   echo ""
 }
 
+download_files() {
+# When using this function:
+# download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
+#
+# Can also use string concatenation for a single argument
+# if URLs are separated by spaces.
+
+  echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
+  echo ""
+
+  if $TORSOCKS wget $@; then
+    return 0
+  else
+    echo "  MESSAGE:  Something went wrong with the download"
+
+    if [ $TORSOCKS = "torsocks" ]; then
+      echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
+    fi
+
+    return 1
+  fi
+}
+
 ### E #######################
 #############################
 
@@ -316,28 +339,6 @@ stop_install_message() {
 
 ### Z #######################
 #############################
-
-# When using this function:
-# download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
-#
-# Can also use string concatenation for a single argument
-# if URLs are separated by spaces.
-download_files() {
-  echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
-  echo ""
-
-  if $TORSOCKS wget $@; then
-    return 0
-  else
-    echo "  MESSAGE:  Something went wrong with the download"
-
-    if [ $TORSOCKS = "torsocks" ]; then
-      echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
-    fi
-
-    return 1
-  fi
-}
 
 check_if_pgp_key_exists_in_keyring() {
   echo "  MESSAGE:  Checking for PGP key in your keyring..."
