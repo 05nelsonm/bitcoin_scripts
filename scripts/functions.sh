@@ -66,18 +66,20 @@ check_if_pgp_key_exists_in_keyring() {
 }
 
 check_if_running() {
-  case $1 in
+  local DEFINED_PACKAGE=$1
+
+  case $DEFINED_PACKAGE in
 
     # Wasabi Wallet
     "${SCRIPT_AVAILABLE_PACKAGES[9]}")
       if pgrep wassabee; then
-        stop_install_message $1
+        stop_install_message $DEFINED_PACKAGE
         return 1
       fi
       ;;
 
     *)
-      echo "  MESSAGE:  $1 is not an option available for this function."
+      echo "  MESSAGE:  $DEFINED_PACKAGE is not an option available for this function."
       return 1
       ;;
 
