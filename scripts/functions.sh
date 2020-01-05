@@ -135,13 +135,13 @@ clean_up() {
       shift
     fi
 
-    local ARGUMENTS=( $@ )
+    local FILES_DIRS=( $@ )
 
     for ((i=0; i < $#; i++)); do
-      if ! [ -z "${ARGUMENTS[$i]}" ]; then
-        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
-          $SUDO rm -rf "${ARGUMENTS[$i]}"
-          echo "  DELETED:  ${ARGUMENTS[$i]}"
+      if ! [ -z "${FILES_DIRS[$i]}" ]; then
+        if [[ -f "${FILES_DIRS[$i]}" || -d "${FILES_DIRS[$i]}" ]]; then
+          $SUDO rm -rf "${FILES_DIRS[$i]}"
+          echo "  DELETED:  ${FILES_DIRS[$i]}"
         fi
       fi
     done
