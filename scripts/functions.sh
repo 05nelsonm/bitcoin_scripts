@@ -410,23 +410,12 @@ verify_pgp_signature() {
   fi
 }
 
-### W #######################
-#############################
-
-### X #######################
-#############################
-
-### Y #######################
-#############################
-
-### Z #######################
-#############################
-
+verify_sha256sum() {
 # When using this function:
 # verify_sha256sum $SHA256SUM_FILE
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
-verify_sha256sum() {
+
   echo "  MESSAGE:  Verifying sha256sum of $PACKAGE_NAME..."
   echo ""
 
@@ -443,6 +432,18 @@ verify_sha256sum() {
     return 1
   fi
 }
+
+### W #######################
+#############################
+
+### X #######################
+#############################
+
+### Y #######################
+#############################
+
+### Z #######################
+#############################
 
 # When using this function:
 # clean_up $FILE_1 $FILE_2 ...
