@@ -36,6 +36,20 @@ change_dir() {
   fi
 }
 
+check_if_pgp_key_exists_in_keyring() {
+  echo "  MESSAGE:  Checking for PGP key in your keyring..."
+  echo ""
+
+  if OUT=$(gpg --list-keys 2>/dev/null) &&
+           echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
+    unset OUT
+    return 0
+  else
+    unset OUT
+    return 1
+  fi
+}
+
 check_if_running() {
   case $1 in
 
@@ -339,20 +353,6 @@ stop_install_message() {
 
 ### Z #######################
 #############################
-
-check_if_pgp_key_exists_in_keyring() {
-  echo "  MESSAGE:  Checking for PGP key in your keyring..."
-  echo ""
-
-  if OUT=$(gpg --list-keys 2>/dev/null) &&
-           echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
-    unset OUT
-    return 0
-  else
-    unset OUT
-    return 1
-  fi
-}
 
 # When using this function:
 # import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
