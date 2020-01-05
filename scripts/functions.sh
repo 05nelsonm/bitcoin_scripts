@@ -240,6 +240,12 @@ set_tor_options() {
   fi
 }
 
+stop_install_message() {
+  echo "  MESSAGE:  An update to $LATEST_VERSION is available."
+  echo "  MESSAGE:  Please exit $1 at your earliest"
+  echo "  MESSAGE:  convience and re-run this script"
+}
+
 ### T #######################
 #############################
 
@@ -260,12 +266,6 @@ set_tor_options() {
 
 ### Z #######################
 #############################
-
-stop_install_message() {
-  echo "  MESSAGE:  An update to $LATEST_VERSION is available."
-  echo "  MESSAGE:  Please exit $1 at your earliest"
-  echo "  MESSAGE:  convience and re-run this script"
-}
 
 check_if_running() {
   case $1 in
