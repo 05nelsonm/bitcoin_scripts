@@ -81,6 +81,11 @@ display_title_message() {
 ### S #######################
 #############################
 
+set_download_dir() {
+  unset DOWNLOAD_DIR
+  DOWNLOAD_DIR=$1
+}
+
 ### T #######################
 #############################
 
@@ -101,11 +106,6 @@ display_title_message() {
 
 ### Z #######################
 #############################
-
-set_download_dir() {
-  unset DOWNLOAD_DIR
-  DOWNLOAD_DIR=$1
-}
 
 change_dir() {
   if [ "$1" != "" ]; then
