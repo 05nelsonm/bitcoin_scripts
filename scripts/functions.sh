@@ -36,6 +36,27 @@ change_dir() {
   fi
 }
 
+check_if_running() {
+  case $1 in
+
+    # Wasabi Wallet
+    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
+      if pgrep wassabee; then
+        stop_install_message $1
+        return 1
+      fi
+      ;;
+
+    *)
+      echo "  MESSAGE:  $1 is not an option available for this function."
+      return 1
+      ;;
+
+  esac
+
+  return 0
+}
+
 compare_current_with_latest_version() {
   local CURRENT=$1
   local LATEST=$2
@@ -266,27 +287,6 @@ stop_install_message() {
 
 ### Z #######################
 #############################
-
-check_if_running() {
-  case $1 in
-
-    # Wasabi Wallet
-    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
-      if pgrep wassabee; then
-        stop_install_message $1
-        return 1
-      fi
-      ;;
-
-    *)
-      echo "  MESSAGE:  $1 is not an option available for this function."
-      return 1
-      ;;
-
-  esac
-
-  return 0
-}
 
 # When using this function:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
