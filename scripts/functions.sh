@@ -1,16 +1,10 @@
 #!/bin/bash
 
-display_title_message() {
-  echo ""
-  echo "============================================================================"
-  echo ""
-  echo "                       Getting $1 for you!"
-  echo ""
-  echo "============================================================================"
-  echo ""
-  echo "                  Press 'ctrl + c' to stop at any time"
-  echo ""
-}
+# Functions are sorted alphabetically by name to make locating them easier.
+
+
+### A ###############################################################################
+#####################################################################################
 
 array_contains() {
   for VALUE in $1; do
@@ -24,10 +18,11 @@ array_contains() {
   return 1
 }
 
-set_download_dir() {
-  unset DOWNLOAD_DIR
-  DOWNLOAD_DIR=$1
-}
+### B ###############################################################################
+#####################################################################################
+
+### C ###############################################################################
+#####################################################################################
 
 change_dir() {
   if [ "$1" != "" ]; then
@@ -44,19 +39,188 @@ change_dir() {
   fi
 }
 
-set_script_option_variables() {
-  if array_contains $USER_DEFINED_OPTIONS "--dry-run"; then
-    DRY_RUN="--dry-run"
-  fi
+check_if_pgp_key_exists_in_keyring() {
+  echo "  MESSAGE:  Checking for PGP key in your keyring..."
+  echo ""
 
-  if array_contains $USER_DEFINED_OPTIONS "--no-tor"; then
-    NO_TOR="--no-tor"
-  fi
-
-  if array_contains $USER_DEFINED_OPTIONS "--only-tor"; then
-    ONLY_TOR="--only-tor"
+  if OUT=$(gpg --list-keys 2>/dev/null) &&
+           echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
+    unset OUT
+    return 0
+  else
+    unset OUT
+    return 1
   fi
 }
+
+check_if_running() {
+  case $1 in
+
+    # Wasabi Wallet
+    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
+      if pgrep wassabee; then
+        stop_install_message $1
+        return 1
+      fi
+      ;;
+
+    *)
+      echo "  MESSAGE:  $1 is not an option available for this function."
+      return 1
+      ;;
+
+  esac
+
+  return 0
+}
+
+check_for_already_downloaded_package() {
+# When using this function:
+# check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
+#                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
+#                                      ...
+
+  echo "  MESSAGE:  Checking if package(s) have already been downloaded..."
+  echo ""
+
+  local ARGUMENTS=( $@ )
+  local COUNTER=0
+  for ((i=0; i < $#; i+=2)); do
+    if ! [ -z "${ARGUMENTS[$i]}" ]; then
+      if ! [ -f "${ARGUMENTS[$i]}" ]; then
+        DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
+        let COUNTER++
+      fi
+    fi
+  done
+
+  if [ $COUNTER -eq 0 ]; then
+    echo "  MESSAGE:  Packages are already downloaded"
+    echo ""
+    return 0
+  else
+    return 1
+  fi
+}
+
+clean_up() {
+# When using this function:
+# clean_up $FILE_1 $FILE_2 ...
+#
+# Can also send `--sudo` as the first argument to
+# make this method call `sudo rm -rf ...`
+
+  if [ "$DRY_RUN" != "--dry-run" ]; then
+
+    if [ $1 = --sudo ]; then
+      local SUDO="sudo"
+      shift
+    fi
+
+    local ARGUMENTS=( $@ )
+    local CLEAN_UP_DIR=$(pwd)
+
+    for ((i=0; i < $#; i++)); do
+      if ! [ -z "${ARGUMENTS[$i]}" ]; then
+        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
+          $SUDO rm -rf "${ARGUMENTS[$i]}"
+          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
+        fi
+      fi
+    done
+
+  fi
+}
+
+compare_current_with_latest_version() {
+  local CURRENT=$1
+  local LATEST=$2
+
+  if [ "$CURRENT" != "$LATEST" ]; then
+    echo "  MESSAGE:  An update to version $LATEST is available!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Already up to date with version $LATEST!"
+    return 1
+  fi
+}
+
+### D ###############################################################################
+#####################################################################################
+
+display_title_message() {
+  echo ""
+  echo "============================================================================"
+  echo ""
+  echo "                       Getting $1 for you!"
+  echo ""
+  echo "============================================================================"
+  echo ""
+  echo "                  Press 'ctrl + c' to stop at any time"
+  echo ""
+}
+
+download_and_import_pgp_keys_from_file() {
+# When using this function:
+# download_and_import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
+
+  echo "  MESSAGE:  Importing PGP key from file..."
+  echo ""
+
+  if [ -f $1 ]; then
+    mv "$1" "$1.previous"
+    echo "  MESSAGE:  $1 already existed and was renamed to $1.previous"
+    echo ""
+  fi
+
+  if ! download_files "$2"; then
+    return 1
+  fi
+
+  if gpg --import "$1" 2>/dev/null; then
+    rm -rf "$1"
+    echo "  MESSAGE:  PGP keys have been successfully imported!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Failed to import PGP key to verify signature"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
+    return 1
+  fi
+}
+
+download_files() {
+# When using this function:
+# download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
+#
+# Can also use string concatenation for a single argument
+# if URLs are separated by spaces.
+
+  echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
+  echo ""
+
+  if $TORSOCKS wget $@; then
+    return 0
+  else
+    echo "  MESSAGE:  Something went wrong with the download"
+
+    if [ $TORSOCKS = "torsocks" ]; then
+      echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
+    fi
+
+    return 1
+  fi
+}
+
+### E ###############################################################################
+#####################################################################################
+
+### F ###############################################################################
+#####################################################################################
+
+### G ###############################################################################
+#####################################################################################
 
 get_dependencies() {
   case $1 in
@@ -124,6 +288,79 @@ get_dependencies() {
   fi
 }
 
+### H ###############################################################################
+#####################################################################################
+
+### I ###############################################################################
+#####################################################################################
+
+import_pgp_keys_from_url() {
+# When using this function:
+# import_pgp_keys_from_url $KEY_SERVER_URL
+
+  echo "  MESSAGE:  Importing PGP key..."
+  echo ""
+
+  if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
+    echo "  MESSAGE:  PGP keys have been successfully imported!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Failed to import PGP key to verify signature"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
+    return 1
+  fi
+}
+
+### J ###############################################################################
+#####################################################################################
+
+### K ###############################################################################
+#####################################################################################
+
+### L ###############################################################################
+#####################################################################################
+
+### M ###############################################################################
+#####################################################################################
+
+### N ###############################################################################
+#####################################################################################
+
+### O ###############################################################################
+#####################################################################################
+
+### P ###############################################################################
+#####################################################################################
+
+### Q ###############################################################################
+#####################################################################################
+
+### R ###############################################################################
+#####################################################################################
+
+### S ###############################################################################
+#####################################################################################
+
+set_download_dir() {
+  unset DOWNLOAD_DIR
+  DOWNLOAD_DIR=$1
+}
+
+set_script_option_variables() {
+  if array_contains $USER_DEFINED_OPTIONS "--dry-run"; then
+    DRY_RUN="--dry-run"
+  fi
+
+  if array_contains $USER_DEFINED_OPTIONS "--no-tor"; then
+    NO_TOR="--no-tor"
+  fi
+
+  if array_contains $USER_DEFINED_OPTIONS "--only-tor"; then
+    ONLY_TOR="--only-tor"
+  fi
+}
+
 set_tor_options() {
   if command -v tor 1>/dev/null; then
     echo "  MESSAGE:  Checking for Tor connectivity..."
@@ -169,159 +406,25 @@ set_tor_options() {
   fi
 }
 
-compare_current_with_latest_version() {
-  local CURRENT=$1
-  local LATEST=$2
-
-  if [ "$CURRENT" != "$LATEST" ]; then
-    echo "  MESSAGE:  An update to version $LATEST is available!"
-    echo ""
-    return 0
-  else
-    echo "  MESSAGE:  Already up to date with version $LATEST!"
-    return 1
-  fi
-}
-
 stop_install_message() {
   echo "  MESSAGE:  An update to $LATEST_VERSION is available."
   echo "  MESSAGE:  Please exit $1 at your earliest"
   echo "  MESSAGE:  convience and re-run this script"
 }
 
-check_if_running() {
-  case $1 in
+### T ###############################################################################
+#####################################################################################
 
-    # Wasabi Wallet
-    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
-      if pgrep wassabee; then
-        stop_install_message $1
-        return 1
-      fi
-      ;;
+### U ###############################################################################
+#####################################################################################
 
-    *)
-      echo "  MESSAGE:  $1 is not an option available for this function."
-      return 1
-      ;;
+### V ###############################################################################
+#####################################################################################
 
-  esac
-
-  return 0
-}
-
-# When using this function:
-# check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
-#                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
-#                                      ...
-check_for_already_downloaded_package() {
-  echo "  MESSAGE:  Checking if package(s) have already been downloaded..."
-  echo ""
-
-  local ARGUMENTS=( $@ )
-  local COUNTER=0
-  for ((i=0; i < $#; i+=2)); do
-    if ! [ -z "${ARGUMENTS[$i]}" ]; then
-      if ! [ -f "${ARGUMENTS[$i]}" ]; then
-        DOWNLOAD_STRING+="${ARGUMENTS[$i+1]} "
-        let COUNTER++
-      fi
-    fi
-  done
-
-  if [ $COUNTER -eq 0 ]; then
-    echo "  MESSAGE:  Packages are already downloaded"
-    echo ""
-    return 0
-  else
-    return 1
-  fi
-}
-
-# When using this function:
-# download_files $DOWNLOAD_URL $DOWNLOAD_2_URL ...
-#
-# Can also use string concatenation for a single argument
-# if URLs are separated by spaces.
-download_files() {
-  echo "  MESSAGE:  Downloading package(s) to $DOWNLOAD_DIR..."
-  echo ""
-
-  if $TORSOCKS wget $@; then
-    return 0
-  else
-    echo "  MESSAGE:  Something went wrong with the download"
-
-    if [ $TORSOCKS = "torsocks" ]; then
-      echo "  MESSAGE:  Try executing 'sudo service tor restart' and re-running the script"
-    fi
-
-    return 1
-  fi
-}
-
-check_if_pgp_key_exists_in_keyring() {
-  echo "  MESSAGE:  Checking for PGP key in your keyring..."
-  echo ""
-
-  if OUT=$(gpg --list-keys 2>/dev/null) &&
-           echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
-    unset OUT
-    return 0
-  else
-    unset OUT
-    return 1
-  fi
-}
-
-# When using this function:
-# import_pgp_keys_from_file $PGP_FILE_NAME $PGP_FILE_DOWNLOAD_URL
-download_and_import_pgp_keys_from_file() {
-  echo "  MESSAGE:  Importing PGP key from file..."
-  echo ""
-
-  if [ -f $1 ]; then
-    mv "$1" "$1.previous"
-    echo "  MESSAGE:  $1 already existed and was renamed to $1.previous"
-    echo ""
-  fi
-
-  if ! download_files "$2"; then
-    return 1
-  fi
-
-  if gpg --import "$1" 2>/dev/null; then
-    rm -rf "$1"
-    echo "  MESSAGE:  PGP keys have been successfully imported!"
-    echo ""
-    return 0
-  else
-    echo "  MESSAGE:  Failed to import PGP key to verify signature"
-    echo "  MESSAGE:  Check gpg settings and re-run the script"
-    return 1
-  fi
-}
-
-# When using this function:
-# import_pgp_keys_from_url $KEY_SERVER_URL
-import_pgp_keys_from_url() {
-  echo "  MESSAGE:  Importing PGP key..."
-  echo ""
-
-  if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
-    echo "  MESSAGE:  PGP keys have been successfully imported!"
-    echo ""
-    return 0
-  else
-    echo "  MESSAGE:  Failed to import PGP key to verify signature"
-    echo "  MESSAGE:  Check gpg settings and re-run the script"
-    return 1
-  fi
-}
-
+verify_pgp_signature() {
 # When using this function:
 # verify_pgp_signature $PGP_FILE_NAME
-verify_pgp_signature() {
+
   echo "  MESSAGE:  Verifying PGP signature of $1..."
   echo ""
 
@@ -339,11 +442,12 @@ verify_pgp_signature() {
   fi
 }
 
+verify_sha256sum() {
 # When using this function:
 # verify_sha256sum $SHA256SUM_FILE
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
-verify_sha256sum() {
+
   echo "  MESSAGE:  Verifying sha256sum of $PACKAGE_NAME..."
   echo ""
 
@@ -361,30 +465,14 @@ verify_sha256sum() {
   fi
 }
 
-# When using this function:
-# clean_up $FILE_1 $FILE_2 ...
-#
-# Can also send `--sudo` as the first argument to
-# make this method call `sudo rm -rf ...`
-clean_up() {
-  if [ "$DRY_RUN" != "--dry-run" ]; then
+### W ###############################################################################
+#####################################################################################
 
-    if [ $1 = --sudo ]; then
-      local SUDO="sudo"
-      shift
-    fi
+### X ###############################################################################
+#####################################################################################
 
-    local ARGUMENTS=( $@ )
-    local CLEAN_UP_DIR=$(pwd)
+### Y ###############################################################################
+#####################################################################################
 
-    for ((i=0; i < $#; i++)); do
-      if ! [ -z "${ARGUMENTS[$i]}" ]; then
-        if [[ -f "${ARGUMENTS[$i]}" || -d "${ARGUMENTS[$i]}" ]]; then
-          $SUDO rm -rf "${ARGUMENTS[$i]}"
-          echo "  DELETED:  $CLEAN_UP_DIR/${ARGUMENTS[$i]}"
-        fi
-      fi
-    done
-
-  fi
-}
+### Z ###############################################################################
+#####################################################################################
