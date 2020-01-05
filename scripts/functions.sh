@@ -10,10 +10,13 @@ array_contains() {
 # Checks if an array contains a value
 #
 # When using this function:
-# array_contains $ARRAY $VALUE
+# array_contains $ARRAY $SEARCH_FOR
 
-  for VALUE in $1; do
-    if [ "$VALUE" = "$2" ]; then
+  local ARRAY=$1
+  local SEARCH_FOR=$2
+
+  for VALUE in $ARRAY; do
+    if [ "$VALUE" = "$SEARCH_FOR" ]; then
       unset VALUE
       return 0
     fi
