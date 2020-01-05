@@ -480,13 +480,16 @@ verify_sha256sum() {
 #
 # The files it will be checking must all be in the same directory as $SHA256SUM_FILE
 
+  local FILE=$1
+  local CURRENT_DIR=$(pwd)
+
   echo "  MESSAGE:  Verifying sha256sum of $PACKAGE_NAME..."
   echo ""
 
-  if sha256sum --check $1 --ignore-missing 2>/dev/null; then
+  if sha256sum --check $FILE --ignore-missing 2>/dev/null; then
     echo ""
     echo "  MESSAGE:  $PACKAGE_NAME has been verified and is located"
-    echo "  MESSAGE:  in $DOWNLOAD_DIR"
+    echo "  MESSAGE:  in $CURRENT_DIR"
     echo ""
     return 0
   else
