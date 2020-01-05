@@ -102,6 +102,7 @@ check_for_already_downloaded_package() {
 
   local ARGUMENTS=( $@ )
   local COUNTER=0
+
   for ((i=0; i < $#; i+=2)); do
     if ! [ -z "${ARGUMENTS[$i]}" ]; then
       if ! [ -f "${ARGUMENTS[$i]}" ]; then
@@ -122,14 +123,14 @@ check_for_already_downloaded_package() {
 
 clean_up() {
 # When using this function:
-# clean_up $FILE_1 $FILE_2 ...
+# clean_up $FILE_1 $FILE_2 $DIRECTORY_A $DIRECTORY_B...
 #
 # Can also send `--sudo` as the first argument to
 # make this method call `sudo rm -rf ...`
 
   if [ "$DRY_RUN" != "--dry-run" ]; then
 
-    if [ $1 = --sudo ]; then
+    if [ "$1" = "--sudo" ]; then
       local SUDO="sudo"
       shift
     fi
