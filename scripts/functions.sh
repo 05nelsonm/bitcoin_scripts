@@ -21,6 +21,21 @@ array_contains() {
 ### C #######################
 #############################
 
+change_dir() {
+  if [ "$1" != "" ]; then
+
+    if [ -d $1 ]; then
+      cd $1
+    else
+      mkdir -p $1 && cd $1
+    fi
+
+    return 0
+  else
+    return 1
+  fi
+}
+
 ### D #######################
 #############################
 
@@ -106,21 +121,6 @@ set_download_dir() {
 
 ### Z #######################
 #############################
-
-change_dir() {
-  if [ "$1" != "" ]; then
-
-    if [ -d $1 ]; then
-      cd $1
-    else
-      mkdir -p $1 && cd $1
-    fi
-
-    return 0
-  else
-    return 1
-  fi
-}
 
 set_script_option_variables() {
   if array_contains $USER_DEFINED_OPTIONS "--dry-run"; then
