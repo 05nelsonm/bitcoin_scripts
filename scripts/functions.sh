@@ -60,6 +60,72 @@ display_title_message() {
 ### G #######################
 #############################
 
+get_dependencies() {
+  case $1 in
+
+    "no-specified-script-package")
+      shift
+      local NEEDED_DEPENDENCIES=( $@ )
+      ;;
+
+    # Coldcard Firmware
+    "${SCRIPT_AVAILABLE_PACKAGES[2]}")
+      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
+      ;;
+
+    # Coldcard Protocol
+    "${SCRIPT_AVAILABLE_PACKAGES[3]}")
+      local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
+                                 "libudev1" "libudev-dev" "python3" \
+                                 "python-pip" $TORSOCKS)
+      ;;
+
+    # Wasabi Wallet
+    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
+      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
+      ;;
+
+    *)
+      echo "  MESSAGE:  $1 is not an option available for this function."
+      return 1
+      ;;
+
+  esac
+
+  echo "  MESSAGE:  Checking for needed dependencies..."
+  echo ""
+
+  local COUNTER=0
+
+  for PACKAGE in ${NEEDED_DEPENDENCIES[*]}; do
+    if ! dpkg -l $PACKAGE > /dev/null 2>&1; then
+      local INSTALL_STRING+=" $PACKAGE"
+      let COUNTER++
+    fi
+  done
+  unset PACKAGE
+
+  if [ $COUNTER -gt 0 ]; then
+
+    if ! sudo apt-get update; then
+      echo "  MESSAGE:  Could not execute 'sudo apt-get update'"
+      return 1
+    fi
+
+    if ! sudo apt-get install$INSTALL_STRING -y; then
+      echo "  MESSAGE:  installation of$INSTALL_STRING failed"
+      return 1
+    fi
+
+    return 0
+
+  else
+    echo "  MESSAGE:  All needed dependencies are present!"
+    echo ""
+    return 0
+  fi
+}
+
 ### H #######################
 #############################
 
@@ -135,72 +201,6 @@ set_script_option_variables() {
 
 ### Z #######################
 #############################
-
-get_dependencies() {
-  case $1 in
-
-    "no-specified-script-package")
-      shift
-      local NEEDED_DEPENDENCIES=( $@ )
-      ;;
-
-    # Coldcard Firmware
-    "${SCRIPT_AVAILABLE_PACKAGES[2]}")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
-      ;;
-
-    # Coldcard Protocol
-    "${SCRIPT_AVAILABLE_PACKAGES[3]}")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
-                                 "libudev1" "libudev-dev" "python3" \
-                                 "python-pip" $TORSOCKS)
-      ;;
-
-    # Wasabi Wallet
-    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
-      ;;
-
-    *)
-      echo "  MESSAGE:  $1 is not an option available for this function."
-      return 1
-      ;;
-
-  esac
-
-  echo "  MESSAGE:  Checking for needed dependencies..."
-  echo ""
-
-  local COUNTER=0
-
-  for PACKAGE in ${NEEDED_DEPENDENCIES[*]}; do
-    if ! dpkg -l $PACKAGE > /dev/null 2>&1; then
-      local INSTALL_STRING+=" $PACKAGE"
-      let COUNTER++
-    fi
-  done
-  unset PACKAGE
-
-  if [ $COUNTER -gt 0 ]; then
-
-    if ! sudo apt-get update; then
-      echo "  MESSAGE:  Could not execute 'sudo apt-get update'"
-      return 1
-    fi
-
-    if ! sudo apt-get install$INSTALL_STRING -y; then
-      echo "  MESSAGE:  installation of$INSTALL_STRING failed"
-      return 1
-    fi
-
-    return 0
-
-  else
-    echo "  MESSAGE:  All needed dependencies are present!"
-    echo ""
-    return 0
-  fi
-}
 
 set_tor_options() {
   if command -v tor 1>/dev/null; then
