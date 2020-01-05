@@ -262,6 +262,24 @@ get_dependencies() {
 ### I #######################
 #############################
 
+import_pgp_keys_from_url() {
+# When using this function:
+# import_pgp_keys_from_url $KEY_SERVER_URL
+
+  echo "  MESSAGE:  Importing PGP key..."
+  echo ""
+
+  if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
+    echo "  MESSAGE:  PGP keys have been successfully imported!"
+    echo ""
+    return 0
+  else
+    echo "  MESSAGE:  Failed to import PGP key to verify signature"
+    echo "  MESSAGE:  Check gpg settings and re-run the script"
+    return 1
+  fi
+}
+
 ### J #######################
 #############################
 
@@ -382,23 +400,6 @@ stop_install_message() {
 
 ### Z #######################
 #############################
-
-# When using this function:
-# import_pgp_keys_from_url $KEY_SERVER_URL
-import_pgp_keys_from_url() {
-  echo "  MESSAGE:  Importing PGP key..."
-  echo ""
-
-  if curl -s $CURL_TOR_FLAG $1 | gpg --import 2>/dev/null; then
-    echo "  MESSAGE:  PGP keys have been successfully imported!"
-    echo ""
-    return 0
-  else
-    echo "  MESSAGE:  Failed to import PGP key to verify signature"
-    echo "  MESSAGE:  Check gpg settings and re-run the script"
-    return 1
-  fi
-}
 
 # When using this function:
 # verify_pgp_signature $PGP_FILE_NAME
