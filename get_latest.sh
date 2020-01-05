@@ -184,13 +184,15 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
+  local DEFINED_PACKAGE=$1
+
   if [ "$DRY_RUN" != "--dry-run" ]; then
 
     if ! compare_current_with_latest_version $CURRENT_VERSION $LATEST_VERSION; then
       return 1
     fi
 
-    if ! check_if_running $1; then
+    if ! check_if_running $DEFINED_PACKAGE; then
       return 1
     fi
 
@@ -310,12 +312,12 @@ case $USER_DEFINED_PACKAGE in
 
     # Coldcard Firmware
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
-      ckcc_firmware "${SCRIPT_AVAILABLE_PACKAGES[2]}"
+      ckcc_firmware
     fi
 
     # Coldcard Protocol
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
-      ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
+      ckcc_protocol
     fi
 
     # Wasabi Wallet
@@ -329,7 +331,7 @@ case $USER_DEFINED_PACKAGE in
     initialize_script
 
     if initialize_specific_package $USER_DEFINED_PACKAGE; then
-      ckcc_firmware $USER_DEFINED_PACKAGE
+      ckcc_firmware
     fi
     echo ""
     ;;
@@ -339,7 +341,7 @@ case $USER_DEFINED_PACKAGE in
     initialize_script
 
     if initialize_specific_package $USER_DEFINED_PACKAGE; then
-      ckcc_protocol $USER_DEFINED_PACKAGE
+      ckcc_protocol
     fi
     echo ""
     ;;
