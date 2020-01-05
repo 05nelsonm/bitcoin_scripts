@@ -248,7 +248,9 @@ download_files() {
 #####################################################################################
 
 get_dependencies() {
-  case $1 in
+  local DEFINED_PACKAGE=$1
+
+  case $DEFINED_PACKAGE in
 
     "no-specified-script-package")
       shift
@@ -284,13 +286,13 @@ get_dependencies() {
 
   local COUNTER=0
 
-  for PACKAGE in ${NEEDED_DEPENDENCIES[*]}; do
-    if ! dpkg -l $PACKAGE > /dev/null 2>&1; then
-      local INSTALL_STRING+=" $PACKAGE"
+  for DEPENDENCY in ${NEEDED_DEPENDENCIES[*]}; do
+    if ! dpkg -l $DEPENDENCY > /dev/null 2>&1; then
+      local INSTALL_STRING+=" $DEPENDENCY"
       let COUNTER++
     fi
   done
-  unset PACKAGE
+  unset DEPENDENCY
 
   if [ $COUNTER -gt 0 ]; then
 
