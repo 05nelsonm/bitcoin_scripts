@@ -91,7 +91,7 @@ ckcc_firmware() {
 
   fi
 
-  if ! check_if_pgp_key_exists_in_keyring; then
+  if ! check_if_pgp_key_exists_in_keyring "$PGP_KEY_FINGERPRINT"; then
 
     if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
       return 1
@@ -211,7 +211,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! check_if_pgp_key_exists_in_keyring; then
+  if ! check_if_pgp_key_exists_in_keyring "$PGP_KEY_FINGERPRINT"; then
 
     if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
       return 1

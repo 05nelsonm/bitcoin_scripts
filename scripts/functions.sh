@@ -45,11 +45,13 @@ change_dir() {
 }
 
 check_if_pgp_key_exists_in_keyring() {
+  local FINGERPRINT=$1
+
   echo "  MESSAGE:  Checking for PGP key in your keyring..."
   echo ""
 
   if OUT=$(gpg --list-keys 2>/dev/null) &&
-           echo "$OUT" | grep -qs "$PGP_KEY_FINGERPRINT"; then
+           echo "$OUT" | grep -qs "$FINGERPRINT"; then
     unset OUT
     return 0
   else
