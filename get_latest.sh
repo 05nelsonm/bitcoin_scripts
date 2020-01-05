@@ -58,15 +58,17 @@ initialize_script() {
 initialize_specific_package() {
 # Initializes things that need to be called for each individual package
 
+  local SPECIFIC_PACKAGE=$1
+
   cd $WORKING_DIR
 
-  display_title_message $1
+  display_title_message $SPECIFIC_PACKAGE
 
-  if ! get_dependencies $1; then
+  if ! get_dependencies $SPECIFIC_PACKAGE; then
     return 1
   fi
 
-  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $1; then
+  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $SPECIFIC_PACKAGE; then
     return 1
   fi
 
@@ -91,7 +93,7 @@ ckcc_firmware() {
 
   fi
 
-  if ! check_if_pgp_key_exists_in_keyring; then
+  if ! check_if_pgp_key_exists_in_keyring "$PGP_KEY_FINGERPRINT"; then
 
     if ! import_pgp_keys_from_url "$PGP_IMPORT_URL"; then
       return 1
@@ -99,7 +101,7 @@ ckcc_firmware() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME" "$PGP_KEY_FINGERPRINT"; then
     return 1
   fi
 
@@ -182,13 +184,15 @@ ckcc_protocol() {
 }
 
 wasabi_wallet() {
+  local DEFINED_PACKAGE=$1
+
   if [ "$DRY_RUN" != "--dry-run" ]; then
 
     if ! compare_current_with_latest_version $CURRENT_VERSION $LATEST_VERSION; then
       return 1
     fi
 
-    if ! check_if_running $1; then
+    if ! check_if_running $DEFINED_PACKAGE; then
       return 1
     fi
 
@@ -211,7 +215,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! check_if_pgp_key_exists_in_keyring; then
+  if ! check_if_pgp_key_exists_in_keyring "$PGP_KEY_FINGERPRINT"; then
 
     if ! download_and_import_pgp_keys_from_file "$PGP_FILE_NAME" "$PGP_FILE_URL"; then
       return 1
@@ -219,7 +223,7 @@ wasabi_wallet() {
 
   fi
 
-  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME"; then
+  if ! verify_pgp_signature "$SIGNATURE_FILE_NAME" "$PGP_KEY_FINGERPRINT"; then
     return 1
   fi
 
@@ -308,12 +312,12 @@ case $USER_DEFINED_PACKAGE in
 
     # Coldcard Firmware
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
-      ckcc_firmware "${SCRIPT_AVAILABLE_PACKAGES[2]}"
+      ckcc_firmware
     fi
 
     # Coldcard Protocol
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
-      ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
+      ckcc_protocol
     fi
 
     # Wasabi Wallet
@@ -327,7 +331,7 @@ case $USER_DEFINED_PACKAGE in
     initialize_script
 
     if initialize_specific_package $USER_DEFINED_PACKAGE; then
-      ckcc_firmware $USER_DEFINED_PACKAGE
+      ckcc_firmware
     fi
     echo ""
     ;;
@@ -337,7 +341,7 @@ case $USER_DEFINED_PACKAGE in
     initialize_script
 
     if initialize_specific_package $USER_DEFINED_PACKAGE; then
-      ckcc_protocol $USER_DEFINED_PACKAGE
+      ckcc_protocol
     fi
     echo ""
     ;;
