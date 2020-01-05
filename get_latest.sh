@@ -8,9 +8,12 @@ SCRIPT_AVAILABLE_PACKAGES=("get-all" "bitcoin-core" "ckcc-firmware" "ckcc-protoc
 
 WORKING_DIR=$( cd $( dirname ${BASH_SOURCE[0]} ) >/dev/null && pwd )
 
+source_file() {
+# Extends `source` by adding logic checks and returns
+#
 # When using this method:
 # source_file $FILE_NAME $ARGUMENT_1 $ARGUMENT_2 ...
-source_file() {
+
   local FILE=$1; shift
   local ARGUMENTS=( $@ )
 
@@ -29,6 +32,8 @@ source_file() {
 }
 
 initialize_script() {
+# Initializes things that only need to be called once every time the script is run
+
   if ! source_file "$WORKING_DIR/scripts/functions.sh"; then
     echo "  MESSAGE:  Could not source necessary file:"
     echo "  MESSAGE:  $WORKING_DIR/scripts/functions.sh"
@@ -51,6 +56,8 @@ initialize_script() {
 }
 
 initialize_specific_package() {
+# Initializes things that need to be called for each individual package
+
   cd $WORKING_DIR
 
   display_title_message $1
@@ -299,14 +306,17 @@ case $USER_DEFINED_PACKAGE in
   "${SCRIPT_AVAILABLE_PACKAGES[0]}")
     initialize_script
 
+    # Coldcard Firmware
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
       ckcc_firmware "${SCRIPT_AVAILABLE_PACKAGES[2]}"
     fi
 
+    # Coldcard Protocol
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
       ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
     fi
 
+    # Wasabi Wallet
     if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
       wasabi_wallet "${SCRIPT_AVAILABLE_PACKAGES[9]}"
     fi
