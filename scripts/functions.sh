@@ -167,10 +167,12 @@ compare_current_with_latest_version() {
 #####################################################################################
 
 display_title_message() {
+  local DEFINED_PACKAGE=$1
+
   echo ""
   echo "============================================================================"
   echo ""
-  echo "                       Getting $1 for you!"
+  echo "                       Getting $DEFINED_PACKAGE for you!"
   echo ""
   echo "============================================================================"
   echo ""
