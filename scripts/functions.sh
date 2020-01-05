@@ -3,6 +3,18 @@
 ### A #######################
 #############################
 
+array_contains() {
+  for VALUE in $1; do
+    if [ "$VALUE" = "$2" ]; then
+      unset VALUE
+      return 0
+    fi
+  done
+
+  unset VALUE
+  return 1
+}
+
 ### B #######################
 #############################
 
@@ -89,18 +101,6 @@ display_title_message() {
 
 ### Z #######################
 #############################
-
-array_contains() {
-  for VALUE in $1; do
-    if [ "$VALUE" = "$2" ]; then
-      unset VALUE
-      return 0
-    fi
-  done
-
-  unset VALUE
-  return 1
-}
 
 set_download_dir() {
   unset DOWNLOAD_DIR
