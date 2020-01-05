@@ -7,6 +7,11 @@
 #####################################################################################
 
 array_contains() {
+# Checks if an array contains a value
+#
+# When using this function:
+# array_contains $ARRAY $VALUE
+
   for VALUE in $1; do
     if [ "$VALUE" = "$2" ]; then
       unset VALUE
@@ -75,6 +80,9 @@ check_if_running() {
 }
 
 check_for_already_downloaded_package() {
+# If package isn't already downloaded, builds a string of the download urls
+# that can be later sent to the download_files function
+#
 # When using this function:
 # check_for_already_downloaded_package $PACKAGE_1_NAME $DOWNLOAD_1_URL \
 #                                      $PACKAGE_2_NAME $DOWNLOAD_2_URL \
