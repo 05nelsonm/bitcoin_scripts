@@ -58,15 +58,17 @@ initialize_script() {
 initialize_specific_package() {
 # Initializes things that need to be called for each individual package
 
+  local SPECIFIC_PACKAGE=$1
+
   cd $WORKING_DIR
 
-  display_title_message $1
+  display_title_message $SPECIFIC_PACKAGE
 
-  if ! get_dependencies $1; then
+  if ! get_dependencies $SPECIFIC_PACKAGE; then
     return 1
   fi
 
-  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $1; then
+  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $SPECIFIC_PACKAGE; then
     return 1
   fi
 
