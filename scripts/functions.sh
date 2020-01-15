@@ -257,25 +257,14 @@ get_dependencies() {
       local NEEDED_DEPENDENCIES=( $@ )
       ;;
 
-    # Coldcard Firmware
-    "${SCRIPT_AVAILABLE_PACKAGES[2]}")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
-      ;;
-
     # Coldcard Protocol
     "${SCRIPT_AVAILABLE_PACKAGES[3]}")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "jq" "libusb-1.0-0-dev" \
-                                 "libudev1" "libudev-dev" "python3" \
-                                 "python-pip" $TORSOCKS)
-      ;;
-
-    # Wasabi Wallet
-    "${SCRIPT_AVAILABLE_PACKAGES[9]}")
-      local NEEDED_DEPENDENCIES=("curl" "wget" "gpg" "jq" $TORSOCKS)
+      local NEEDED_DEPENDENCIES=("libusb-1.0-0-dev" "libudev1" "libudev-dev" \
+                                 "python3" "python-pip")
       ;;
 
     *)
-      echo "  MESSAGE:  $1 is not an option available for this function."
+      echo "  MESSAGE:  $DEFINED_PACKAGE is not an option available for this function."
       return 1
       ;;
 
@@ -301,9 +290,18 @@ get_dependencies() {
       return 1
     fi
 
-    if ! sudo apt-get install$INSTALL_STRING -y; then
+    if [ $DEFINED_PACKAGE = "no-specified-script-package" ]; then
+      local TEMP_DRY_RUN=$DRY_RUN
+      unset DRY_RUN
+    fi
+
+    if ! sudo apt-get $DRY_RUN install$INSTALL_STRING -y; then
       echo "  MESSAGE:  installation of$INSTALL_STRING failed"
       return 1
+    fi
+
+    if [ "$TEMP_DRY_RUN" = "--dry-run" ]; then
+      DRY_RUN=$TEMP_DRY_RUN
     fi
 
     return 0
@@ -394,15 +392,6 @@ set_tor_options() {
   if command -v tor 1>/dev/null; then
     echo "  MESSAGE:  Checking for Tor connectivity..."
     echo ""
-
-    if ! command -v curl 1>/dev/null; then
-
-      if ! get_dependencies "no-specified-script-package" "curl"; then
-        echo "  MESSAGE:  Curl needs to be installed to go any further..."
-        exit 1
-      fi
-
-    fi
 
     if OUT=$(curl --socks5 $TOR_IP:$TOR_PORT --socks5-hostname $TOR_IP:$TOR_PORT \
              https://check.torproject.org/ | cat | grep -m 1 "Congratulations" \
