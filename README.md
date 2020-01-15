@@ -43,7 +43,7 @@ These scripts have been tested on:
 
 ## Getting Started
 - Clone this repo  
-- `cd bitcoin-full-node-scripts`  
+- `cd sovereignty_scripts`  
 - `./get_latest.sh` to display the help message for more info.  
 
 Example command for retrieving & verifying the latest Coldcard Firmware:  
