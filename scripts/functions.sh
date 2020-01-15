@@ -225,7 +225,7 @@ download_files() {
   echo "  MESSAGE:  Downloading package(s) to $CURRENT_DIR..."
   echo ""
 
-  if $TORSOCKS wget "${DOWNLOAD_URLS[*]}"; then
+  if $TORSOCKS wget ${DOWNLOAD_URLS[*]}; then
     return 0
   else
     echo "  MESSAGE:  Something went wrong with the download"
