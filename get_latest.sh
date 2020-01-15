@@ -50,25 +50,36 @@ initialize_script() {
 
   set_script_option_variables
 
+  if ! command -v curl 1>/dev/null; then
+
+    if ! get_dependencies "no-specified-script-package" "curl"; then
+      echo "  MESSAGE:  Curl needs to be installed to go any further..."
+      exit 1
+    fi
+
+  fi
+
   if [ "$NO_TOR" != "--no-tor" ]; then
     set_tor_options
   fi
+
+  local NEEDED_DEPENDENCIES=("wget" "gpg" "jq" $TORSOCKS)
+  if ! get_dependencies "no-specified-script-package" ${NEEDED_DEPENDENCIES[*]}; then
+    echo "  MESSAGE:  ${NEEDED_DEPENDENCIES[*]} need to be installed to go any further..."
+    exit 1
+  fi
 }
 
-initialize_specific_package() {
+initialize_defined_package() {
 # Initializes things that need to be called for each individual package
 
-  local SPECIFIC_PACKAGE=$1
+  local DEFINED_PACKAGE=$1
 
   cd $WORKING_DIR
 
-  display_title_message $SPECIFIC_PACKAGE
+  display_title_message $DEFINED_PACKAGE
 
-  if ! get_dependencies $SPECIFIC_PACKAGE; then
-    return 1
-  fi
-
-  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $SPECIFIC_PACKAGE; then
+  if ! source_file "$WORKING_DIR/scripts/project_info.sh" $DEFINED_PACKAGE; then
     return 1
   fi
 
@@ -121,6 +132,12 @@ ckcc_firmware() {
 }
 
 ckcc_protocol() {
+  local DEFINED_PACKAGE=$1
+
+  if ! get_dependencies $DEFINED_PACKAGE; then
+    return 1
+  fi
+
   local PYTHON_3_VERSION=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f 2)
 
   if [ $PYTHON_3_VERSION -lt 6 ]; then
@@ -311,17 +328,17 @@ case $USER_DEFINED_PACKAGE in
     initialize_script
 
     # Coldcard Firmware
-    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
+    if initialize_defined_package "${SCRIPT_AVAILABLE_PACKAGES[2]}"; then
       ckcc_firmware
     fi
 
     # Coldcard Protocol
-    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
-      ckcc_protocol
+    if initialize_defined_package "${SCRIPT_AVAILABLE_PACKAGES[3]}"; then
+      ckcc_protocol "${SCRIPT_AVAILABLE_PACKAGES[3]}"
     fi
 
     # Wasabi Wallet
-    if initialize_specific_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
+    if initialize_defined_package "${SCRIPT_AVAILABLE_PACKAGES[9]}"; then
       wasabi_wallet "${SCRIPT_AVAILABLE_PACKAGES[9]}"
     fi
     ;;
@@ -330,7 +347,7 @@ case $USER_DEFINED_PACKAGE in
   "${SCRIPT_AVAILABLE_PACKAGES[2]}")
     initialize_script
 
-    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+    if initialize_defined_package $USER_DEFINED_PACKAGE; then
       ckcc_firmware
     fi
     echo ""
@@ -340,8 +357,8 @@ case $USER_DEFINED_PACKAGE in
   "${SCRIPT_AVAILABLE_PACKAGES[3]}")
     initialize_script
 
-    if initialize_specific_package $USER_DEFINED_PACKAGE; then
-      ckcc_protocol
+    if initialize_defined_package $USER_DEFINED_PACKAGE; then
+      ckcc_protocol $USER_DEFINED_PACKAGE
     fi
     echo ""
     ;;
@@ -350,7 +367,7 @@ case $USER_DEFINED_PACKAGE in
   "${SCRIPT_AVAILABLE_PACKAGES[9]}")
     initialize_script
 
-    if initialize_specific_package $USER_DEFINED_PACKAGE; then
+    if initialize_defined_package $USER_DEFINED_PACKAGE; then
       wasabi_wallet $USER_DEFINED_PACKAGE
     fi
     echo ""
