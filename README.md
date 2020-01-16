@@ -33,8 +33,11 @@ https://github.com/05nelsonm/sovereignty_scripts/blob/master/scripts/project_inf
 * [ ] Electrum Wallet
 * [ ] Electrs
 * [ ] Samourai Dojo
+* [ ] c-lightning
+* [ ] Ride The Lightning
 * [ ] Lnd
 * [ ] Zap-Desktop
+* [ ] BTC Pay Server
 
 ## Testing  
 These scripts have been tested on:  
