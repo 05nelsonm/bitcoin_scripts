@@ -260,7 +260,7 @@ get_dependencies() {
     # Coldcard Protocol
     "${SCRIPT_AVAILABLE_PACKAGES[3]}")
       local NEEDED_DEPENDENCIES=("libusb-1.0-0-dev" "libudev1" "libudev-dev" \
-                                 "python3" "python-pip")
+                                 "python3" "python3-pip")
       ;;
 
     *)
